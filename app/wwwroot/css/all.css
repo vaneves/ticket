@@ -1,0 +1,21 @@
+h1 {font-size: 30px}
+h2 {font-size: 26px}
+h3 {font-size: 22px}
+h4 {font-size: 16px}
+h5 {font-size: 12px}
+
+.btn-controls {display: table; width: 100%; margin-top: 20px; margin-bottom: 20px;}
+.btn-controls .left {float: left}
+.btn-controls .right {float: right}
+.btn-controls .pagination {margin: 0}
+.btn-controls .pagination a, .btn-controls .pagination span {line-height: 30px}
+textarea {min-height: 200px}
+.topic-view .row-fluid {padding-top: 10px; padding-bottom: 10px; border-top: 1px solid #DDDDDD}
+.topic-view .row-fluid:nth-child(2n+1) { background-color: #F9F9F9;}
+.topic-profile {padding: 5px; display: table}
+.topic-profile img {float:left; margin: 0 10px}
+.topic-profile-info {float: right}
+.topic-content {padding: 5px; padding-right: 20px}
+td.topic-date {width: 100px;}
+td.topic-author {width: 150px;}
+td.topic-replies {width: 90px;}
