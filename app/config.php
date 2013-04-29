@@ -1,93 +1,112 @@
 <?php
 /*
- * Copyright (c) 2011, Valdirene da Cruz Neves J�nior <linkinsystem666@gmail.com>
+ * Copyright (c) 2011-2012, Valdirene da Cruz Neves Júnior <linkinsystem666@gmail.com>
  * All rights reserved.
  */
 
 
 /**
- * Arquivo de configura��o
+ * Arquivo de configuração
  * 
  */
 
 /**
- * Define o tipo do debug, pode assumir os seguintes valores: off, local, network e all
- * @var string
+ * Define o tipo do debug
  */
-define('debug', 'local');
+Config::set('debug', array(
+	'type'	=> 'local', //pode assumir os seguintes valores: off, local, network e all
+	'query'	=> false //pode assumir false, para desativar, ou um valor para a query ?debug=seu-valor-seguro
+));
 
 /**
  * Tipo do drive do banco de dados, pode assumir os seguintes valores: mysql
- * @var string
  */
-define('db_type', 'mysql');
+Config::set('database', array(
+	'default' => array(
+		'type' => 'mysql',
+		'host' => 'localhost',
+		'name' => 'ticket',
+		'user' => 'root',
+		'pass' => '',
+		'validate' => true
+	)
+));
 
 /**
- * Local do banco de dados 
- * @var string
+ * Master Page padrão
  */
-define('db_host', 'localhost');
+Config::set('default_master', 'template');
 
 /**
- * Nome do banco de dados
- * @var string
+ * Controller padrão
  */
-define('db_name', 'ticket');
+Config::set('default_controller', 'Home');
 
 /**
- * Usu�rio do banco de dados
- * @var string
+ * Action padrão
  */
-define('db_user', 'root');
+Config::set('default_action', 'index');
 
 /**
- * Senha do banco de dados
- * @var string
+ * Página de login
  */
-define('db_pass', '');
+Config::set('default_login', '~/login');
 
 /**
- * Master Page padr�o
- * @var string
+ * Charset padrão
  */
-define('default_master', 'template');
+Config::set('charset', 'UTF-8');
 
 /**
- * Controller padr�o
- * @var string
+ * Linguagem padrão
  */
-define('default_controller', 'Home');
+Config::set('default_lang', 'pt-br');
 
 /**
- * Action padr�o
- * @var string
+ * Chave de segurança (deve ser alterada)
  */
-define('default_action', 'index');
+Config::set('salt', 'ad&&*&32343wCFlo^`]´s32Qw78=H2?Ed');
 
 /**
- * P�gina de login
- * @var string
+ * Define se as requisições via dispositivo móvel irão carregar os templates específicos, se existirem, para versão móvel
  */
-define('default_login', '~/login');
+Config::set('auto_mobile', true);
 
 /**
- * Charset padr�o
- * @var string
+ * Define se as requisições via tablet irão carregar os templates  específicos, se existirem, para versão tablet
  */
-define('charset', 'ISO-8859-1');
+Config::set('auto_tablet', false);
 
 /**
- * Linguagem padr�o
- * @var string
+ * Define se as requisições AJAX devem retornar automaticamente conteúdo em JSON
  */
-define('default_lang', 'pt-br');
+Config::set('auto_ajax', true);
 
 /**
- * Chave de seguran�a (deve ser alterada)
- * @var string
+ * Define se actions acessadas com .xml devem retorna automaticamente conteúdo em XML
  */
-define('salt', 'ad%�44][tgh*)(ww2#$%643d#$5gf54Ql.m,kH2?Ed');
+Config::set('auto_dotxml', true);
 
-define('auto_ajax', false);
-define('auto_dotxml', true);
-define('auto_dotjson', true);
+/**
+ * Define se actions acessadas com .json devem retorna automaticamente conteúdo em JSON
+ */
+Config::set('auto_dotjson', true);
+
+/**
+ * Define as configurações de cache
+ */
+Config::set('cache', array(
+	'enabled'	=> false,
+	'type'		=> 'file',
+	'host'		=> 'localhost',
+	'port'		=> '',
+	'page'		=> false,
+	'time'		=> 10
+));
+
+/**
+ * Registrar diretórios de arquivos de código fonte, para autoload 
+ */
+Config::set('directories', array(
+	'app/vendors',
+));

@@ -1,14 +1,14 @@
 <?php
 /*
- * Copyright (c) 2011, Valdirene da Cruz Neves J˙nior <linkinsystem666@gmail.com>
+ * Copyright (c) 2011, Valdirene da Cruz Neves J√∫nior <linkinsystem666@gmail.com>
  * All rights reserved.
  */
 
 
 /**
- * ExceÁ„o para action n„o encontrada, È tratada pela framework, que resulta numa p·gina n„o encontrada
+ * Exce√ß√£o para action n√£o encontrada, √© tratada pela framework, que resulta numa p√°gina n√£o encontrada
  * 
- * @author	Valdirene da Cruz Neves J˙nior <linkinsystem666@gmail.com>
+ * @author	Valdirene da Cruz Neves J√∫nior <linkinsystem666@gmail.com>
  * @version	1
  *
  */
@@ -16,23 +16,23 @@ class ActionNotFoundException extends PageNotFoundException
 {
 	/**
 	 * Contrutor da classe
-	 * @param string $action	nome da action
+	 * @param	string	$action		nome da action
 	 */
 	public function __construct($action)
 	{
 		$this->file = str_replace('/', '\\', root .'app/controllers/'. controller .'.php');
-		parent::__construct('A action '. $action .' n„o foi encontrada');
+		parent::__construct('A action '. $action .' n√£o foi encontrada');
 	}
 	
 	/**
-	 * Se o debug estiver habilitado, informa ao usu·rio detalhes sobre a action
-	 * @see PageNotFoundException::getDetails()
-	 * @return string	retorna os detalhes da action
+	 * Se o debug estiver habilitado, informa ao usu√°rio detalhes sobre a action
+	 * @see		PageNotFoundException::getDetails()
+	 * @return	string		retorna os detalhes da action
 	 */
 	public function getDetails()
 	{
-		return '&lt;?php'. br .'class '. controller .' extends Controller {'. 
-		br . br . t() .'public function <b>'. action .'</b>() {'. br . t(2) . 
-		'return $this->_view();' . br . t() .'}' . br .'}';
+		return '&lt;?php'. nl .'class '. controller .' extends Controller {'. 
+		nl . nl . t() .'public function <b>'. action .'</b>() {'. nl . t(2) . 
+		'return $this->_view();' . nl . t() .'}' . nl .'}';
 	}
 }

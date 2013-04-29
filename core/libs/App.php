@@ -1,50 +1,56 @@
 <?php
 /*
- * Copyright (c) 2011, Valdirene da Cruz Neves Júnior <linkinsystem666@gmail.com>
+ * Copyright (c) 2011-2012, Valdirene da Cruz Neves JÃºnior <linkinsystem666@gmail.com>
  * All rights reserved.
  */
 
 
 /**
- * Classe principal do Framework, responsável pelo controlar todo o fluxo, fazendo chama de outras classes
+ * Classe principal do Framework, responsÃ¡vel pelo controlar todo o fluxo, fazendo chama de outras classes
  * 
- * @author		Valdirene da Cruz Neves Júnior <linkinsystem666@gmail.com>
- * @version		2.1
+ * @author		Valdirene da Cruz Neves JÃºnior <linkinsystem666@gmail.com>
+ * @version		2.5
  *
  */ 
 class App 
 {
 	/**
-	 * Guarda os argumentos passados pela URL (prefixo, controller, action e parâmetros)
+	 * Guarda os argumentos passados pela URL (prefixo, controller, action e parÃ¢metros)
 	 * @var	array
 	 */
 	private $args = array();
 	
 	/**
 	 * Contrutor da classe
-	 * @param	string	$url	url acessada pelo usuário
+	 * @param	string	$url	url acessada pelo usuÃ¡rio
 	 */
 	public function __construct($url)
 	{
+		define('CACHE_TIME', 60);
+		$cache_config = Config::get('cache');
+		if($cache_config['enabled'] && $cache_config['page'])
+		{
+			$cache = Cache::factory();
+			if($cache->has(URL))
+			{
+				$data = $cache->read(URL);
+				exit($data);
+			}
+		}
+		
+		$registry = Registry::getInstance();
+		
 		$this->args = $this->args($url);
-		define('is_debug', $this->isDebug());
-
-		if(is_debug)
-		{
-			error_reporting(E_ALL ^E_NOTICE^E_WARNING);
-		}
-		else
-		{
-			/*ini_set('display_errors','Off');
-			ini_set('log_errors', 'On');
-			ini_set('error_log', ROOT . DS .'logs'. DS .'error.log');*/
-		}
 		
 		//I18n
 		define('lang', $this->args['lang']);
 		
+		define('LANG', $this->args['lang']);
+		
 		$i18n = I18n::getInstance();
-		$i18n->setLang(lang);
+		$i18n->setLang(LANG);
+		
+		$registry->set('I18n', $i18n);
 		
 		function __($string, $format = null)
 		{
@@ -55,113 +61,97 @@ class App
 			echo I18n::getInstance()->get($string, $format);
 		}
 		
-		define('controller', camelize($this->args['controller']) .'Controller');
+		define('controller', Inflector::camelize($this->args['controller']) .'Controller');
 		define('action', str_replace('-', '_', $this->args['action']));
+		
+		define('CONTROLLER', Inflector::camelize($this->args['controller']) .'Controller');
+		define('ACTION', str_replace('-', '_', $this->args['action']));
 		
 		try
 		{
-			header('Content-type: text/html; charset='. charset);
+			header('Content-type: text/html; charset='. Config::get('charset'));
 			
 			Import::core('Controller', 'Template', 'Annotation');
-			Import::controller(controller, 'MasterController');
+			Import::controller(CONTROLLER);
 		
 			$this->controller();
 			$this->auth();
 			$tpl = new Template();
+			$registry->set('Template', $tpl);
 			$tpl->render($this->args);
-			//cache
+			
+			if($cache_config['enabled'] && $cache_config['page'])
+			{
+				$cache = Cache::factory();
+				$data = ob_get_clean();
+				$cache->write(URL, $data, $cache_config['time']);
+			}
+			
 			Debug::show();
 		}
 		catch(PageNotFoundException $e)
 		{
-			header('HTTP/1.1 404 Not Found');;
-			$this->loadError($e);
+			header('HTTP/1.1 404 Not Found');
+			Error::render(404, $e->getMessage(), $e->getFile(), $e->getLine(), $e->getTraceAsString(), method_exists($e, 'getDetails') ? $e->getDetails() : '');
 			exit;
 		}
 		catch(Exception $e)
 		{
 			header('HTTP/1.1 500 Internal Server Error');
-			$this->loadError($e);
+			Error::render(500, $e->getMessage(), $e->getFile(), $e->getLine(), $e->getTraceAsString(), method_exists($e, 'getDetails') ? $e->getDetails() : '');
 		}
-	}
-	
-	/**
-	 * Verifica se o usuário está acessando via rede
-	 * @param	string	$ip	IP do usuário
-	 * @return	boolean		retorna verdadeiro se o usuário estiver acessando pela rede, no contrário retorna falso
-	 */
-	private function isNetwork($ip)
-	{
-		return false;
-	}
-	
-	/**
-	 * Verifica se o debug está habilidade para este usuário
-	 * @return	boolean		retorna verdadeiro se o debug estiver habilitado
-	 */
-	private function isDebug()
-	{
-		if(debug != 'off')
-		{
-			if(debug == 'local' && (ip == '127.0.0.1' || ip == '::1'))
-				return true;
-			if(debug == 'all')
-				return true;
-			if(debug == 'network' && $this->isNetwork(ip))
-				return true;
-		}
-		return false;
 	}
 	
 	/**
 	 * Extrai os argumentos a partir de URL
-	 * @param	string	$url	url acessada pelo usuário
+	 * @param	string	$url	url acessada pelo usuÃ¡rio
 	 * @return	array			retorna um array com os argumentos
 	 */
 	private function args($url)
 	{
 		$args = Route::exec($url);
+
 		if(empty($args['controller']))
-			$args['controller'] = default_controller;
+			$args['controller'] = Config::get('default_controller');
 		if(empty($args['action']))
-			$args['action'] = default_action;
+			$args['action'] = Config::get('default_action');
 		if(empty($args['lang']))
-			$args['lang'] = default_lang;
+			$args['lang'] = Config::get('default_lang');
 		return $args;
 	}
 	
 	/**
-	 * Valida o controller requisitado pelo usuário através da URL
-	 * @throws	ControllerInheritanceException	dispara se o controller não for subclasse de Controller
-	 * @throws	ActionNotFoundException			dispara se a action não existir no controller
-	 * @throws	ActionVisibilityException		dispara se a action não estiver como públic
-	 * @throws	ActionStaticException			dispara se a action for estática
-	 * @throws	PageNotFoundException			dispara se a quantidade obrigatório na action for diferente do esperado
+	 * Valida o controller requisitado pelo usuÃ¡rio atravÃ©s da URL
+	 * @throws	ControllerInheritanceException	dispara se o controller nÃ£o for subclasse de Controller
+	 * @throws	ActionNotFoundException			dispara se a action nÃ£o existir no controller
+	 * @throws	ActionVisibilityException		dispara se a action nÃ£o estiver como pÃºblic
+	 * @throws	ActionStaticException			dispara se a action for estÃ¡tica
+	 * @throws	PageNotFoundException			dispara se a quantidade obrigatÃ³rio na action for diferente do esperado
 	 * @return	void
 	 */
 	private function controller()
 	{
-		if(!is_subclass_of(controller, 'Controller'))
-			throw new ControllerInheritanceException(controller);
+		if(!is_subclass_of(CONTROLLER, 'Controller'))
+			throw new ControllerInheritanceException(CONTROLLER);
 		
-		if(!method_exists(controller, action)) 
-			throw new ActionNotFoundException(controller .'->'. action .'()');
+		if(!method_exists(CONTROLLER, ACTION)) 
+			throw new ActionNotFoundException(CONTROLLER .'->'. ACTION .'()');
 		
-		$method = new ReflectionMethod(controller, action);
+		$method = new ReflectionMethod(CONTROLLER, ACTION);
 		if(!$method->isPublic()) 
-			throw new ActionVisibilityException(controller .'->'. action .'()');
+			throw new ActionVisibilityException(CONTROLLER .'->'. ACTION .'()');
 		
 		if($method->isStatic()) 
-			throw new ActionStaticException(controller .'->'. action .'()');
+			throw new ActionStaticException(CONTROLLER .'->'. ACTION .'()');
 		
 		if(!$this->isValidParams($method))
-			throw new PageNotFoundException('');
+			throw new PageNotFoundException('A quantidade de parÃ¢metros obrigatÃ³rios nÃ£o conferem');
 	}
 	
 	/**
-	 * Verifica se os parâmetros são válidos
-	 * @param	object	$method	instância de ReflectionMethod da action requisitada
-	 * @return	boolean			retorna true se os parâmetros estiverem certos, ou false no contrário
+	 * Verifica se os parÃ¢metros sÃ£o vÃ¡lidos
+	 * @param	object	$method	instÃ¢ncia de ReflectionMethod da action requisitada
+	 * @return	boolean			retorna true se os parÃ¢metros estiverem certos, ou false no contrÃ¡rio
 	 */
 	private function isValidParams($method)
 	{
@@ -183,39 +173,45 @@ class App
 	}
 	
 	/**
-	 * Carrega a página de erro de acordo com as configurações e mata a execução
-	 * @param	object	$error	instância de Exception
+	 * Carrega a pÃ¡gina de erro de acordo com as configuraÃ§Ãµes e mata a execuÃ§Ã£o
+	 * @param	object	$error	instÃ¢ncia de Exception
 	 * @return	void
 	 */
 	private function loadError($error)
 	{
-		if(is_debug)
-			return require_once root .'core/error/debug.php';
-			
-		$files[] = root .'app/views/_error/'. $error->getCode() .'.php';
-		$files[] = root .'core/error/'. $error->getCode() .'.php';
-		foreach($files as $f)
-		{
-			if(file_exists($f))
-				return require_once $f;
-		}
-		exit('error');	
+		Error::render($error->getCode(), $error->getMessage(), $error->getFile(), $error->getLine(), $error->getTraceAsString(), method_exists($error, 'getDetails') ? $error->getDetails() : '');
 	}
 	
 	/**
-	 * Verifica se o usuário pode acessar a página de acordo com sua autenticação e a anotação do controller. Se não tiver permissão
-	 * é redirecionado para a página de login defina nas configurações
+	 * Verifica se o usuÃ¡rio pode acessar a pÃ¡gina de acordo com sua autenticaÃ§Ã£o e a anotaÃ§Ã£o do controller. Se nÃ£o tiver permissÃ£o
+	 * Ã© redirecionado para a pÃ¡gina de login defina nas configuraÃ§Ãµes
 	 * @return	void
 	 */
 	private function auth()
 	{
-		$annotation = Annotation::get(controller);
+		$annotation = Annotation::get(CONTROLLER);
+		$roles = null;
 		
-		$method = new ReflectionMethod(controller, '__construct');
-		if($method->isPublic())
-			$roles = $annotation->getMethod('__construct')->Auth;
-		if($auth_action = $annotation->getMethod(action)->Auth)
+		if(method_exists(CONTROLLER, '__construct'))
+		{
+			$method = new ReflectionMethod(CONTROLLER, '__construct');
+			if($method->isPublic())
+			{
+				$construct = $annotation->getMethod('__construct');
+				if(isset($construct->Auth))
+					$roles = $construct->Auth;
+			}
+		}
+		
+		$method = $annotation->getMethod(ACTION);
+		$auth_action = isset($method->Auth) ? $method->Auth : null;
+		
+		if($auth_action)
 			$roles = $auth_action;
+		
+		if($auth_action == '*' || (is_array($auth_action) && in_array('*', $auth_action)))
+			$roles = null;
+		
 		if($roles && !is_array($roles))
 			$roles = array($roles);
 		if($roles)

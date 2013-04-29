@@ -1,33 +1,46 @@
-<?php if(count($model->Data)): ?>
-<table>
-	<thead>
-		<tr>
-			<th>Número</th>
-			<th><a href="~/admin/ticket/list/<?php echo $s ?>/<?php echo $p ?>/date/<?php echo $r ?>/" class="<?php echo $o == 'date' ? $t : '' ?>">Data</a></th>
-			<th><a href="~/admin/ticket/list/<?php echo $s ?>/<?php echo $p ?>/subject/<?php echo $r ?>/" class="<?php echo $o == 'subject' ? $t : '' ?>">Assunto</a></th>
-			<th><a href="~/admin/ticket/list/<?php echo $s ?>/<?php echo $p ?>/priority/<?php echo $r ?>/" class="<?php echo $o == 'priority' ? $t : '' ?>">Prioridade</a></th>
-			<th><a href="~/admin/ticket/list/<?php echo $s ?>/<?php echo $p ?>/status/<?php echo $r ?>/" class="<?php echo $o == 'status' ? $t : '' ?>">Status</a></th>
-			<th></th>
-		</tr>
-	</thead>
-	<tbody>
-		<?php foreach($model->Data as $ticket): ?>
-		<tr>
-			<td>#<?php echo $ticket->Id ?></td>
-			<td><?php echo date('d/m/Y H:i:s', strtotime($ticket->Date)) ?></td>
-			<td><?php echo $ticket->Subject ?></td>
-			<td><?php echo $ticket->Priority ?></td>
-			<td><?php echo $ticket->Status ?></td>
-			<td><a href="~/admin/ticket/view/<?php echo $ticket->Id ?>">[ ver ]</a></td>
-		<tr>
-		<?php endforeach ?>
-	</tbody>
-<table>
-<ul class="pagination">
-	<?php for($i = 1; $i <= ceil($model->Count / 20); $i++): ?>
-		<li><a href="~/admin/ticket/list/<?php echo $s ?>/<?php echo $p ?>/<?php echo $o ?>/<?php echo $r ?>/" class="<?php echo $p == $i ? 'actual' : '' ?>"><?php echo $i ?></a></li>
-	<?php endfor ?>
-</ul>
-<?php else: ?>
-	<p>Você não criou tickets ainda.</p>
-<?php endif ?>
+<div class="row-fluid">
+	
+	<div class="btn-controls">
+		<div class="right">
+			<?= Pagination::create('admin/ticket/list-status', $model->Count, $p, 20) ?>
+		</div>
+	</div>
+	
+	<?php if(count($model->Data)): ?>
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<?php $t = $t == 'DESC' ? 'ASC': 'DESC' ?>
+				<th>Autor</th>
+				<th><a href="~/admin/ticket/list-status/<?= $p ?>/status/<?= $t ?>/" class="<?= $o == 'status' ? $t : '' ?>">Status</a></th>
+				<th><a href="~/admin/ticket/list-status/<?= $p ?>/subject/<?= $t ?>/" class="<?= $o == 'subject' ? $t : '' ?>">Assunto</a></th>
+				<th><a href="~/admin/ticket/list-status/<?= $p ?>/priority/<?= $t ?>/" class="<?= $o == 'priority' ? $t : '' ?>">Prioridade</a></th>
+				<th><a href="~/admin/ticket/list-status/<?= $p ?>/date/<?= $t ?>/" class="<?= $o == 'date' ? $t : '' ?>">Data</a></th>
+			</tr>
+		</thead>
+		<tbody>
+			<?php $status = array('<span class="label label-warning">Aberto</span>','<span class="label label-success">Respondido</span>','<span class="label">Fechado</span>'); ?>
+			<?php $priority = array('<span class="badge badge-info">Baixa</span>','<span class="badge badge-warning">MÃ©dia</span>','<span class="badge badge-important">&nbsp; Alta &nbsp;</span>'); ?>
+			<?php foreach($model->Data as $ticket): ?>
+			<tr>
+				<td><img src="http://www.gravatar.com/avatar/<?= md5(strtolower(trim($ticket->Email))) ?>?s=32&d=mm" alt="<?= $ticket->Name ?>" class="img-polaroid" /></td>
+				<td><?= $status[$ticket->Status] ?></td>
+				<td>
+					<a href="~/admin/ticket/view/<?= $ticket->Id ?>"><?= $ticket->Subject ?></a>
+					<div class="muted"><small><?= $ticket->Name ?> (<?= $ticket->Email ?>)</small></div>
+				</td>
+				<td><?= $priority[$ticket->Priority] ?></td>
+				<td><?= date('d M Y H:i', strtotime($ticket->Date)) ?></td>
+			</tr>
+			<?php endforeach ?>
+		</tbody>
+	</table>
+	<div class="btn-controls">
+		<div class="right">
+			<?= Pagination::create('admin/ticket/list-status', $model->Count, $p, 20) ?>
+		</div>
+	</div>
+	<?php else: ?>
+		<p>VocÃª nÃ£o criou tickets ainda.</p>
+	<?php endif ?>
+</div>

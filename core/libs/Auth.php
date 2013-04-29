@@ -1,29 +1,29 @@
 <?php
 /*
- * Copyright (c) 2011, Valdirene da Cruz Neves J˙nior <linkinsystem666@gmail.com>
+ * Copyright (c) 2011, Valdirene da Cruz Neves J√∫nior <linkinsystem666@gmail.com>
  * All rights reserved.
  */
 
 
 /**
- * Classe para autenticaÁ„o do usu·rio
+ * Classe para autentica√ß√£o do usu√°rio
  * 
- * @author		Valdirene da Cruz Neves J˙nior <linkinsystem666@gmail.com>
- * @version		2
+ * @author		Valdirene da Cruz Neves J√∫nior <linkinsystem666@gmail.com>
+ * @version		2.2
  *
  */ 
 class Auth 
 {
 	/**
-	 * Construtor da classe, È privado porque a classe sÛ contÈm mÈtodo est·ticos e n„o pode inst‚nciada
+	 * Construtor da classe, √© privado porque a classe s√≥ cont√©m m√©todo est√°ticos e n√£o pode inst√¢nciada
 	 */
 	private function __construct(){}
 	
 	/**
-	 * Define um ou mais papÈis para o usu·rio na sess„o
-	 * @param	string	$param1	nome do papÈl
-	 * @param	string	$param2	nome do papÈl
-	 * @param	string	$paramN	nome do papÈl
+	 * Define um ou mais pap√©is para o usu√°rio na sess√£o
+	 * @param	string	$param1	nome do papel
+	 * @param	string	$param2	nome do papel
+	 * @param	string	$paramN	nome do papel
 	 * @return	void
 	 */
 	public static function set()
@@ -35,10 +35,10 @@ class Auth
 	}
 	
 	/**
-	 * Remove um mais papÈis do usu·rio na sess„o
-	 * @param	string	$param1	nome do papÈl
-	 * @param	string	$param2	nome do papÈl
-	 * @param	string	$paramN	nome do papÈl
+	 * Remove um mais pap√©is do usu√°rio na sess√£o
+	 * @param	string	$param1	nome do papel
+	 * @param	string	$param2	nome do papel
+	 * @param	string	$paramN	nome do papel
 	 * @return	void
 	 */
 	public static function remove()
@@ -50,7 +50,7 @@ class Auth
 	}
 	
 	/**
-	 * Remove todos os papÈis do usu·rio na sess„o
+	 * Remove todos os pap√©is do usu√°rio na sess√£o
 	 * @return	void
 	 */
 	public static function clear()
@@ -60,11 +60,11 @@ class Auth
 	}
 	
 	/**
-	 * Verifica se o usu·rio possui, na sess„o, os papÈis informados no par‚metro
-	 * @param	string	$param1	nome do papÈl
-	 * @param	string	$param2	nome do papÈl
-	 * @param	string	$paramN	nome do papÈl
-	 * @throws	AuthException	dispara se o usu·rio estiver algum papÈl na sess„o, porÈm este n„o for informado do par‚metro
+	 * Verifica se o usu√°rio possui, na sess√£o, os pap√©is informados no par√¢metro
+	 * @param	string	$param1	nome do papel
+	 * @param	string	$param2	nome do papel
+	 * @param	string	$paramN	nome do papel
+	 * @throws	AuthException	dispara se o usu√°rio estiver algum papel na sess√£o, por√©m este n√£o for informado do par√¢metro
 	 * @return	void
 	 */
 	public static function allow()
@@ -76,20 +76,20 @@ class Auth
 		{
 			if(!self::isLogged())
 			{
-				$location = preg_match('@^~/@', default_login) ? root_virtual . trim(default_login, '~/') : default_login;
+				$location = preg_match('@^~/@', Config::get('default_login')) ? ROOT_VIRTUAL . trim(Config::get('default_login'), '~/') : Config::get('default_login');
 				header('Location: '. $location);
 				exit;
 			}
-			throw new AuthException('VocÍ n„o tem permiss„o para acessar esta p·gina', 403);
+			throw new AuthException('Voc√™ n√£o tem permiss√£o para acessar essa p√°gina', 403);
 		}
 	}
 	
 	/**
-	 * Verifica se o usu·rio possui um ou mais papÈis informado como par‚metro
-	 * @param	string	$param1	nome do papÈl
-	 * @param	string	$param2	nome do papÈl
-	 * @param	string	$paramN	nome do papÈl
-	 * @return	boolean			retorna true se tiver um dos papÈis, no contr·rio retorna false
+	 * Verifica se o usu√°rio possui um ou mais pap√©is informado como par√¢metro
+	 * @param	string	$param1	nome do papel
+	 * @param	string	$param2	nome do papel
+	 * @param	string	$paramN	nome do papel
+	 * @return	boolean			retorna true se tiver um dos pap√©is, no contr√°rio retorna false
 	 */
 	public static function is()
 	{
@@ -104,13 +104,13 @@ class Auth
 	}
 	
 	/**
-	 * Verifica se o usu·rio possuim um ou mais papÈis na sess„o
-	 * @return	boolean		retorna true se o usu·rio possuir, caso contr·rio retorna false
+	 * Verifica se o usu√°rio possuim um ou mais pap√©is na sess√£o
+	 * @return	boolean		retorna true se o usu√°rio possuir, caso contr√°rio retorna false
 	 */
 	public static function isLogged()
 	{
 		Session::start();
-		if(is_array($_SESSION[self::key()]))
+		if(isset($_SESSION[self::key()]) && is_array($_SESSION[self::key()]))
 		{
 			foreach($_SESSION[self::key()] as $role)
 			{
@@ -122,18 +122,19 @@ class Auth
 	}
 	
 	/**
-	 * Pega um papÈl na sess„o
-	 * @param	string	$key	nome do papÈl
-	 * @return	string			retorna o papÈl
+	 * Pega um papel na sess√£o
+	 * @param	string	$key	nome do papel
+	 * @return	string			retorna o papel
 	 */
 	private static function _get($key)
 	{
-		return $_SESSION[self::key()][$key];
+		if(isset($_SESSION[self::key()][$key]))
+			return $_SESSION[self::key()][$key];
 	}
 	
 	/**
-	 * Adiciona um papÈl na sess„o
-	 * @param	string	$key	nome do papÈl
+	 * Adiciona um papel na sess√£o
+	 * @param	string	$key	nome do papel
 	 * @param	string	$value	valor
 	 * @return	void
 	 */
@@ -143,11 +144,11 @@ class Auth
 	}
 	
 	/**
-	 * Gera uma chave MD5 com base no navegador do usu·rio e no salt, definido na configuraÁ„o
+	 * Gera uma chave MD5 com base no navegador do usu√°rio e no salt, definido na configura√ß√£o
 	 * @return	string	retorn o MD5 gerado
 	 */
 	private static function key()
 	{
-		return 'Auth.'. md5($_SERVER['HTTP_USER_AGENT'] . salt);
+		return 'Auth.'. md5($_SERVER['HTTP_USER_AGENT'] . Config::get('salt') . ROOT_VIRTUAL);
 	}
 }

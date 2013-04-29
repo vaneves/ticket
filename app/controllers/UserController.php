@@ -5,30 +5,37 @@ class UserController extends Controller
 	
 	public function register()
 	{
-		$db = Database::getInstance();
+		/*$db = Database::getInstance();
 		$db->User->innerJoin('Ticket')->all();
-		exit;
+		exit;*/
+		$user = new User();
 	
 		if(is_post)
 		{
 			try
 			{
-				if($this->_data()->Password != $this->_data()->Confirm)
-					throw new ValidationException('Os campos "Senha" e "Confirmar Senha" estão diferentes');
-				if(User::exists($this->_data()->Email))
-					throw new ValidationException('E-mail já está cadastrado');
-				$user = $this->_data(new User());
-				$user->Type = 2;
+				$data = $this->_data();
+				
+				if($data->Password != $data->Confirm)
+					throw new ValidationException('Os campos "Senha" e "Confirmar Senha" estÃ£o diferentes');
+				if(User::exists($data->Email))
+					throw new ValidationException('E-mail jÃ¡ estÃ¡ cadastrado');
+				$user->Name		= $data->Name;
+				$user->Email	= $data->Email;
+				$user->Type		= 2;
+				$user->Password	= md5($data->Password);
+				
 				$user->save();
-				$this->_flash('success', 'Seu cadastro foi realizado com sucesso');
+				
+				$this->_flash('alert', 'Seu cadastro foi realizado com sucesso');
 			}
 			catch(ValidationException $e)
 			{
-				$this->_flash('error', $e->getMessage());
+				$this->_flash('alert alert-error', $e->getMessage());
 			}
 			catch(Exception $e)
 			{
-				$this->_flash('error', 'Ocorreu um erro ao tentar salvar seus dados');
+				$this->_flash('alert alert-error', 'Ocorreu um erro ao tentar salvar seus dados');
 			}
 		}
 		return $this->_view($user);
@@ -43,13 +50,16 @@ class UserController extends Controller
 			if($user)
 			{
 				$roles = array('admin', 'employee', 'client', 'ticket');
+				Auth::clear();
+				Session::clear();
+				
 				Session::set('user', $user);
 				Auth::set($roles[$user->Type]);
 				$this->_redirect('~/welcome');
 			}
 			else
 			{
-				$this->_flash('error', 'E-mail ou senha incorreta!');
+				$this->_flash('alert alert-error', 'E-mail ou senha incorreta!');
 			}
 		}
 		return $this->_view();
@@ -79,22 +89,22 @@ class UserController extends Controller
 					$mail->To		= $user->Email;
 					$mail->Form		= 'Ticket Portal <nao-responda@ulbra-to.br>';
 					$mail->Subject	= 'Recuperar Senha';
-					$mail->Message	= 'Olá <b>'. $user->Name .'</b>, <br />';
-					$mail->Message	.= 'sua nova senha é: '. $passwd;
+					$mail->Message	= 'OlÃ¡ <b>'. $user->Name .'</b>, <br />';
+					$mail->Message	.= 'sua nova senha Ã©: '. $passwd;
 					
 					if($mail->Send())
-						$this->_flash('success', 'Sua nova senha foi enviada por e-mail');
+						$this->_flash('alert', 'Sua nova senha foi enviada por e-mail');
 					else
-						$this->_flash('error', 'Ocorreu um erro ao tentar enviar um e-mail com sua nova senha');
+						$this->_flash('alert alert-error', 'Ocorreu um erro ao tentar enviar um e-mail com sua nova senha');
 				}
 				catch(Exception $e)
 				{
-					$this->_flash('error', 'Ocorreu um erro ao tentar recuperar sua senha');
+					$this->_flash('alert alert-error', 'Ocorreu um erro ao tentar recuperar sua senha');
 				}
 			}
 			else
 			{
-				$this->_flash('error', 'E-mail não cadastrado');
+				$this->_flash('alert alert-error', 'E-mail nÃ£o cadastrado');
 			}
 		}
 		return $this->_view($this->_data());

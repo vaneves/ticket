@@ -62,7 +62,7 @@ class BForm extends Html
 	 */
 	public static function password($label, $name, $value = null, $size = 'input-xlarge', $attrs = array())
 	{
-		return self::create('input', $label, $name, $value, true, array_merge(array('value' => $value, 'type' => 'password'), $attrs));
+		return self::create('input', $label, $name, $value, true, array_merge(array('value' => $value, 'type' => 'password', 'class' => $size), $attrs));
 	}
 	
 	/**
@@ -90,7 +90,7 @@ class BForm extends Html
 	 * @param	array	$attrs		os demais atributos do campo, como por exemplo "onclick", "title" e etc.
 	 * @return	string				retorna o HTML do select gerado
 	 */
-	public static function select($name, $options = array(), $selected = null, $attrs = array())
+	public static function select($label, $name, $options = array(), $selected = null, $size = 'input-xlarge', $attrs = array())
 	{
 		$op = '';
 		if(is_array($options))
@@ -103,7 +103,7 @@ class BForm extends Html
 				$op .= self::createTag('option', $optionAttrs, false, $t) . "\n";
 			}
 		}
-		return self::createTag('select', array_merge(array('name' => $name, 'id' => $name), $attrs), false, $op);
+		return self::create('select', $label, $name, $op, false, array_merge(array('class' => $size), $attrs));
 	}
 	
 	/**

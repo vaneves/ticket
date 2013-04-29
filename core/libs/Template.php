@@ -1,55 +1,65 @@
 <?php
 /*
- * Copyright (c) 2011, Valdirene da Cruz Neves Júnior <linkinsystem666@gmail.com>
+ * Copyright (c) 2011-2012, Valdirene da Cruz Neves JÃºnior <linkinsystem666@gmail.com>
  * All rights reserved.
  */
 
 
 /**
- * Classe responsável por renderizar a página
+ * Classe responsÃ¡vel por renderizar a pÃ¡gina
  * 
- * @author	Valdirene da Cruz Neves Júnior <linkinsystem666@gmail.com>
- * @version	2.1
+ * @author	Valdirene da Cruz Neves JÃºnior <linkinsystem666@gmail.com>
+ * @version	2.5
  *
  */
 class Template
-{	
+{
 	/**
-	 * Renderiza a página solicitada pelo usuário
-	 * @param	array	$args				argumentos requisitados pelo usuário, como controller, action e parâmetros
+	 * Guarda o conteÃºdo da resposta da requisiÃ§Ã£o, pode ser HTML, JSON ou XML
+	 * @var	string
+	 */
+	private $response;
+	
+	/**
+	 * Guarda os hooks do usuÃ¡rio
+	 * @var	array	lista com instÃ¢ncias das classes que contÃªm os hooks
+	 */
+	private $hook = array();
+	
+	/**
+	 * Renderiza a pÃ¡gina solicitada pelo usuÃ¡rio
+	 * @param	array	$args				argumentos requisitados pelo usuÃ¡rio, como controller, action e parÃ¢metros
 	 * @throws	InvalidReturnException		Disparada caso a action solicitada retorne null
 	 * @return	void
 	 */
 	public function render($args)
 	{
-		$tpl_method = $this->master();
+		$this->master();
 		
-		$master = new MasterController();
-		$master->{$tpl_method}();
+		$registry = Registry::getInstance();
 		
-		$name = controller;
+		$name = CONTROLLER;
 		$controller = new $name();
-		$controller->beforeRender();
+		$registry->set('Controller', $controller);
+		$this->response = $controller->beforeRender();
 		
-		$content = call_user_func_array(array($controller, action), $args['params']);
+		$content = call_user_func_array(array($controller, ACTION), $args['params']);
 		
 		if(!$content)
-			throw new InvalidReturnException(controller .'->'. action .'()');
+			throw new InvalidReturnException(CONTROLLER .'->'. ACTION .'()');
 		
 		$this->renderFlash();
 		
-		$method = new ReflectionMethod(controller, action);
+		$method = new ReflectionMethod(CONTROLLER, ACTION);
 		$params = $method->getParameters();
 		
 		for($i = 0; $i < count($params); $i++)
 		{
 			if(!array_key_exists($params[$i]->getName(), $content->Vars))
-			{
-				$content->Vars[$params[$i]->getName()] = $args['params'][$i] !== null ? $args['params'][$i] : $params[$i]->getDefaultValue();
-			}
+				$content->Vars[$params[$i]->getName()] = isset($args['params'][$i]) && $args['params'][$i] !== null ? $args['params'][$i] : $params[$i]->getDefaultValue();
 		}
 		
-		if($args['dot'])
+		if(isset($args['dot']))
 		{
 			$content->Type = $args['dot'];
 			$content->Data = $content->Vars['model'];
@@ -64,8 +74,8 @@ class Template
 			case 'content':
 				$this->renderContent($content);
 				break;
-			case 'page':
-				$this->renderPage($content);
+			case 'partial':
+				$this->renderPartial($content);
 				break;
 			case 'xml':
 				$this->renderXml($content);
@@ -74,39 +84,57 @@ class Template
 				$this->renderJson($content);
 				break;
 			default:
-				throw new InvalidReturnException(controller .'->'. action .'()');
+				throw new InvalidReturnException(CONTROLLER .'->'. ACTION .'()');
 				break;
 		}
-		$controller->afterRender();
+		$this->response = $controller->afterRender($this->response);
+		
+		foreach ($this->hook as $hook)
+			$this->responde = $hook->response($this->response);
+		
+		echo $this->response;
 	}
 	
 	/**
 	 * Verifica e retorna o master page deve ser renderizada
-	 * @throws	MethodNotFoundException		disparado caso método referente ao nome da master não seja encontrado dentro da MasterController
-	 * @throws	MethodVisibilityException	disparado caso método referente ao nome da master não esteja público
+	 * @throws	MethodNotFoundException		disparado caso mÃ©todo referente ao nome da master nÃ£o seja encontrado dentro da MasterController
+	 * @throws	MethodVisibilityException	disparado caso mÃ©todo referente ao nome da master nÃ£o esteja pÃºblico
 	 * @return	string						retorna o nome da master page
 	 */
 	private function master()
 	{
-		$annotation = Annotation::get(controller);
+		$annotation = Annotation::get(CONTROLLER);
 		
-		if(method_exists('__construct', controller)) 
-			$tpl = $annotation->getMethod('__construct')->Master;
+		$reflection = new ReflectionClass(CONTROLLER);
+		$tpl = null;
+		if($reflection->hasMethod('__construct'))
+		{
+			if(property_exists($annotation->getMethod('__construct'), 'Master'))
+				$tpl = $annotation->getMethod('__construct')->Master;
+		}
 		
-		if($tpl_action = $annotation->getMethod(action)->Master)
+		$action = $annotation->getMethod(ACTION);
+		$tpl_action = isset($action->Master) ? $action->Master : null;
+		
+		if($tpl_action)
 			$tpl = $tpl_action;
+		
 		if(!$tpl)
-			$tpl = default_master;
+			$tpl = Config::get('default_master');
 		
 		define('master', $tpl);
-		
-		if(!method_exists('MasterController', $tpl)) 
-			throw new MethodNotFoundException('MasterController->'. $tpl .'()');
-			
-		$method = new ReflectionMethod('MasterController', $tpl);
-		if(!$method->isPublic()) 
-			throw new MethodVisibilityException('MasterController->'. $tpl .'()');
+		define('MASTER', $tpl);
 		return $tpl;
+	}
+	
+	/**
+	 * Adicionar uma instÃ¢ncia de uma classe para disparar o hook
+	 * @param	object	$hook	instÃ¢ncia da classe que contÃ©m o mÃ©todo para ser utilizado no hook
+	 * @return	void
+	 */
+	public function addHook($hook)
+	{
+		$this->hook[] = $hook;
 	}
 	
 	/**
@@ -119,76 +147,83 @@ class Template
 		$flash = Session::get('Flash.Message');
 		if($flash)
 			$html = '<div class="'. $flash->type .'">'. $flash->message .'</div>';
-			
+		
+		foreach($this->hook as $hook)
+			$html = $hook->renderFlash($html);
+		
 		define('flash', $html);
+		define('FLASH', $html);
 		Session::del('Flash.Message');
 	}
 	
 	/**
 	 * Renderiza a view
-	 * @param	object	$ob		objeto com informações da view
+	 * @param	object	$ob		objeto com informaÃ§Ãµes da view
 	 * @return	void
 	 */
 	private function renderView($ob)
 	{
-		$html = Import::view($ob->Vars, '_master', master);
+		$html = Import::view($ob->Vars, '_master', MASTER);
 		$html = $this->resolveUrl($html);
 
 		$content = Import::view($ob->Vars, $ob->Data['controller'], $ob->Data['view']);
 		$content = $this->resolveUrl($content);
 		
-		$html = str_replace(content, $content, $html);
-		echo $html;
+		$html = str_replace(CONTENT, $content, $html);
+		$this->response .= $html;
 	}
 	
 	/**
-	 * Renderiza o conteúdo no lugar da view
-	 * @param	object	$ob		objeto com informações do conteúdo
+	 * Renderiza o conteÃºdo no lugar da view
+	 * @param	object	$ob		objeto com informaÃ§Ãµes do conteÃºdo
 	 * @return	void
 	 */
 	private function renderContent($ob)
 	{
-		$html = Import::view($ob->Vars, '_master', master);
+		$html = Import::view($ob->Vars, '_master', MASTER);
 		$html = $this->resolveUrl($html);
 		
 		$content = $ob->Data;
 		$content = $this->resolveUrl($content);
 		
-		$html = str_replace(content, $content, $html);
-		echo $html;
+		$html = str_replace(CONTENT, $content, $html);
+		$this->response .= $html;
 	}
 	
 	/**
-	 * Renderiza uma página no lugar da view
-	 * @param	object	$ob		objeto com informações da página e da master page
+	 * Renderiza uma pÃ¡gina no lugar da view
+	 * @param	object	$ob		objeto com informaÃ§Ãµes da pÃ¡gina e da master page
 	 * @return	void
 	 */
-	private function renderPage($ob)
+	private function renderPartial($ob)
 	{
-		echo Import::view($ob->Vars, $ob->Data['controller'], $ob->Data['view']);	
+		$html = Import::view($ob->Vars, $ob->Data['controller'], $ob->Data['view']);	
+		$html = $this->resolveUrl($html);
+		
+		$this->response .= $html;
 	}
 	
 	/**
-	 * Renderiza um conteúdo XML e mata a execução
-	 * @param	object	$ob		objeto com informações do XML
+	 * Renderiza um conteÃºdo XML e mata a execuÃ§Ã£o
+	 * @param	object	$ob		objeto com informaÃ§Ãµes do XML
 	 * @return	void
 	 */
 	private function renderXml($ob)
 	{
-		header('Content-type: application/xml; charset='. charset);
-		echo '<?xml version="1.0" encoding="'. charset .'"?>';
-		exit(xml_encode(d($ob->Data)));
+		header('Content-type: application/xml; charset='. Config::get('charset'));
+		$this->response .= '<?xml version="1.0" encoding="'. Config::get('charset') .'"?>';
+		$this->response .= xml_encode(d($ob->Data));
 	}
 	
 	/**
-	 * Renderiza um conteúdo JSON e mata a execução
-	 * @param	object	$ob		objeto com informações do JSON
+	 * Renderiza um conteÃºdo JSON e mata a execuÃ§Ã£o
+	 * @param	object	$ob		objeto com informaÃ§Ãµes do JSON
 	 * @return	void
 	 */
 	private function renderJson($ob)
 	{
-		header('Content-type: application/json; charset='. charset);
-		exit(json_encode(utf8encode(d($ob->Data))));
+		header('Content-type: application/json; charset='. Config::get('charset'));
+		$this->response .= json_encode(utf8encode(d($ob->Data)));
 	}
 	
 	/**
@@ -198,6 +233,6 @@ class Template
 	 */
 	private function resolveUrl($html)
 	{
-		return str_replace(array('="~/', "='"), array('="'. root_virtual, "='". root_virtual), $html);
+		return str_replace(array('"~/', "'~/"), array('"'. ROOT_VIRTUAL, "'". ROOT_VIRTUAL), $html);
 	}
 }

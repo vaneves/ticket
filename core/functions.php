@@ -1,20 +1,20 @@
 <?php 
 /*
- * Copyright (c) 2011, Valdirene da Cruz Neves Júnior <linkinsystem666@gmail.com>
+ * Copyright (c) 2011-2012, Valdirene da Cruz Neves JÃºnior <linkinsystem666@gmail.com>
  * All rights reserved.
  */
 
 
 /**
- * Define algumas funções que serão utilizadas pelo framework 
+ * Define algumas funÃ§Ãµes que serÃ£o utilizadas pelo framework 
  */
 
 
 if(!function_exists('e'))
 {
 	/**
-	 * Imprime um conteúdo
-	 * @param string $string	valor a ser impresso
+	 * Imprime um conteÃºdo
+	 * @param	string	$string		valor a ser impresso
 	 */
 	function e($string)
 	{
@@ -23,88 +23,9 @@ if(!function_exists('e'))
 }
 
 /**
- * Carrega automaticamente uma classe caso a mesma seja instância e não seja importada ainda
- * @param string $class		nome da classe
- * @return void
- */
-function __autoload($class)
-{
-	$files[] = root . 'core/libs/'. $class .'.php';
-	$files[] = root . 'core/libs/exceptions/'. $class .'.php';
-	$files[] = root . 'app/models/'. $class .'.php';
-	$files[] = root . 'app/controllers/'. $class .'.php';
-	$files[] = root . 'app/helpers/'. $class .'.php';
-	
-	foreach($files as $file)
-	{
-		if(file_exists($file))
-		{
-			require_once($file);
-			return;
-		}
-	}
-}
-
-/**
- * Converte 'test-controller' para 'TestController'
- * @param string $string	valor a ser convertido
- * @return string			valor convertido
- */
-function camelize($string) 
-{
-    return str_replace(' ', '', ucwords(str_replace('-', ' ', $string)));
-}
-
-/**
- * Converte 'TestController' para 'test-controller'
- * @param string $string	valor a ser convertido
- * @return string			valor convertido
- */
-function uncamelize($string)
-{
-	return trim(strtolower(preg_replace("/([A-Z])/", "-$1", $string)), '-');
-}
-
-/**
- * Converte 'test-controller' para 'Test Controller'
- * @param string $string	valor a ser convertido
- * @return string			valor convertido
- */
-function humanize($string)
-{
-	return ucwords(str_replace('-', ' ', $string));
-}
-
-/**
- * Converte 'Título de Exemplo' para 'titulo-de-exemplo'
- * @param string $string	valor a ser convertido
- * @return string			retorna o valor convertido
- */
-function slugify($string)
-{
-	$string = html_entity_decode($string);
-
-	$a = 'ÀÁÂÃÄÅàáâãäåÒÓÔÕÖØòóôõöøÈÉÊËèéêëÇçÌÍÎÏìíîïÙÚÛÜùúûüÿÑñ';
-	$b = 'AAAAAAaaaaaaOOOOOOooooooEEEEeeeeCcIIIIiiiiUUUUuuuuyNn';
-	$string = strtr($string, $a, $b);
-
-	$ponctu = array("?", ".", "!", ",");
-	$string = str_replace($ponctu, "", $string);
-
-	$string = trim($string);
-	$string = strtolower($string);
-	$string = preg_replace('/([^a-z0-9]+)/i', '-', $string);
-
-	if (!empty($string))
-		$string = utf8_encode($string);
-
-	return $string;
-}
-
-/**
- * Executa a função print_r com a tag <pre>
- * @param mixed $struct		estrutura a ser impressa
- * @return void
+ * Executa a funÃ§Ã£o print_r com a tag <pre>
+ * @param	mixed	$struct		estrutura a ser impressa
+ * @return	void
  */
 function pr($struct)
 {
@@ -114,9 +35,21 @@ function pr($struct)
 }
 
 /**
- * Cria e retorna o caractere de tabulação
- * @param int $n	quantidade de vezes que desejar dar tabulação
- * @retun string	retorna a tabulação
+ * Executa a funÃ§Ã£o print_r com a tag <pre>
+ * @param	mixed	$struct		estrutura a ser impressa
+ * @return	void
+ */
+function pre($struct)
+{
+	echo '<pre>';
+	print_r($struct);
+	echo '</pre>';
+}
+
+/**
+ * Cria e retorna o caractere de tabulaÃ§Ã£o
+ * @param	int	$n		quantidade de vezes que desejar dar tabulaÃ§Ã£o
+ * @return	string		retorna a tabulaÃ§Ã£o
  */
 function tab($n = 1)
 {
@@ -124,9 +57,9 @@ function tab($n = 1)
 }
 
 /**
- * Cria e retorna espeçacos em branco
- * @param int $n	quantidade de espaços que deseja criar
- * @return string	retorna os espaços
+ * Cria e retorna espeÃ§acos em branco
+ * @param	int	$n		quantidade de espaÃ§os que deseja criar
+ * @return	string		retorna os espaÃ§os
  */
 function t($n = 1)
 {
@@ -134,9 +67,9 @@ function t($n = 1)
 }
 
 /**
- * Cria uma instância de stdClass com a propriedade 'd', que recebe o valor informado no parâmetro
- * @param object $object	objeto que será valor da propridade 'd'
- * @return stdClass			retorna uma instância de stdClass
+ * Cria uma instÃ¢ncia de stdClass com a propriedade 'd', que recebe o valor informado no parÃ¢metro
+ * @param	object	$object		objeto que serÃ¡ valor da propridade 'd'
+ * @return	stdClass			retorna uma instÃ¢ncia de stdClass
  */
 function d($object)
 {
@@ -147,8 +80,8 @@ function d($object)
 
 /**
  * Converte um objeto ou um array em uma string XML
- * @param mixed $data		dados a serem convertidos em XML
- * @return string			retorna uma string XML
+ * @param	mixed	$data		dados a serem convertidos em XML
+ * @return	string				retorna uma string XML
  */
 function xml_encode($data)
 {
@@ -166,8 +99,8 @@ function xml_encode($data)
 
 /**
  * Codifica os valores de um array ou um objeto em UTF-8
- * @param mixed $data		dados a serem convertidos
- * @return mixed			retorna o array ou objeto convertido
+ * @param	mixed	$data		dados a serem convertidos
+ * @return	mixed				retorna o array ou objeto convertido
  */
 function utf8encode($data)
 {
@@ -192,8 +125,8 @@ function utf8encode($data)
 
 /**
  * Decodifica os valores de um array ou objeto de UTF-8
- * @param mixed $data		dados a serem decodificados
- * @return mixed			retorna um objeto ou array sem a codificação UTF-8
+ * @param	mixed	$data	dados a serem decodificados
+ * @return	mixed			retorna um objeto ou array sem a codificaÃ§Ã£o UTF-8
  */
 function utf8decode($data)
 {
@@ -218,10 +151,10 @@ function utf8decode($data)
 
 /**
  * Une dois ou mais array
- * @param array $array1	primeiro array
- * @param array $array2	segundo array
- * @param array $arrayN enéssimo array
- * @return array		retorna um array com união dos demais
+ * @param	array	$array1		primeiro array
+ * @param	array	$array2		segundo array
+ * @param	array	$arrayN		enÃ©ssimo array
+ * @return	array				retorna um array com uniÃ£o dos demais
  */
 function array_union()
 {
@@ -236,8 +169,8 @@ function array_union()
 }
 
 /**
- * Cria um indentificado único
- * @return string	retorna o GUID gerado
+ * Cria um indentificado Ãºnico
+ * @return	string		retorna o GUID gerado
  */
 function guid()
 {
@@ -248,9 +181,9 @@ function guid()
 
 /**
  * Gera uma senha
- * @param int $length	tamanho da senha
- * @param int $strength	nível se segurança da senha, os valores podem ser 1, 2, 4 e 8, quanto maior, mais segura
- * @return string		retorna a senha gerada
+ * @param	int	$length		tamanho da senha
+ * @param	int	$strength	nÃ­vel se seguranÃ§a da senha, os valores podem ser 1, 2, 4 e 8, quanto maior, mais segura
+ * @return	string			retorna a senha gerada
  */
 function new_passwd($length = 8, $strength = 0)
 {
@@ -281,4 +214,64 @@ function new_passwd($length = 8, $strength = 0)
 		}
 	}
 	return $password;
+}
+
+if (!function_exists('get_called_class'))
+{
+	/**
+	 * http://djomla.blog.com/2011/02/16/php-versions-5-2-and-5-3-get_called_class/
+	 */
+	function get_called_class($bt = false, $l = 1)
+	{
+		if (!$bt)
+			$bt = debug_backtrace();
+		if (!isset($bt[$l]))
+			throw new Exception("Cannot find called class -> stack level too deep.");
+		if (!isset($bt[$l]['type']))
+		{
+			throw new Exception('type not set');
+		}
+		else
+		{
+			if($bt[$l]['type'] == '::')
+			{
+				$lines = file($bt[$l]['file']);
+				$i = 0;
+				$callerLine = '';
+				do
+				{
+					$i++;
+					$callerLine = $lines[$bt[$l]['line'] - $i] . $callerLine;
+				} while (stripos($callerLine, $bt[$l]['function']) === false);
+				
+				preg_match('/([a-zA-Z0-9\_]+)::' . $bt[$l]['function'] . '/', $callerLine, $matches);
+				
+				if (!isset($matches[1])) // must be an edge case.
+					throw new Exception("Could not find caller class: originating method call is obscured.");
+				
+				if($matches[1] == 'self' || $matches[1] == 'parent' )
+					return get_called_class($bt, $l + 1);
+				else
+					return $matches[1];
+			}
+			elseif($bt[$l]['type'] == '->') // won't get here.
+			{
+				//if($bt[$l]['function'] == '__get')
+				//{
+					// edge case -> get class of calling object
+					if (!is_object($bt[$l]['object']))
+						return $bt[$l]['class'];
+					return get_class($bt[$l]['object']);
+				/*}
+				else
+				{
+					return $bt[$l]['class'];
+				}*/
+			}
+			else
+			{
+				throw new Exception("Unknown backtrace method type");
+			}
+		}
+	}
 }

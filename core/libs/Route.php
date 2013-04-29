@@ -1,15 +1,15 @@
 <?php
 /*
- * Copyright (c) 2011, Valdirene da Cruz Neves J˙nior <linkinsystem666@gmail.com>
+ * Copyright (c) 2011-2012, Valdirene da Cruz Neves J√∫nior <linkinsystem666@gmail.com>
  * All rights reserved.
  */
 
 
 /**
- * Classe de manipulaÁ„o das rotas (URL). Com ela È possÌvel alterar o endereÁo da chamada controller ou actions
+ * Classe de manipula√ß√£o das rotas (URL). Com ela √© poss√≠vel alterar o endere√ßo da chamada controller ou actions
  * 
- * @author	Valdirene da Cruz Neves J˙nior <linkinsystem666@gmail.com>
- * @version	1
+ * @author	Valdirene da Cruz Neves J√∫nior <linkinsystem666@gmail.com>
+ * @version	1.1
  *
  */
 class Route
@@ -27,7 +27,7 @@ class Route
 	private static $prefix = array();
 	
 	/**
-	 * Contrutor da classe, È privado porque n„o deve ser inst‚nciada
+	 * Contrutor da classe, √© privado porque n√£o deve ser inst√¢nciada
 	 */
 	private function __construct() {}
 	
@@ -43,8 +43,8 @@ class Route
 	
 	/**
 	 * Adiciona uma rota
-	 * @param	string	$route		endereÁo da rota (ex.: '^([\d]+)/([a-z0-9\-]+)$')
-	 * @param	string	$url		endereÁo original (ex.: 'home/view/$1/$2')
+	 * @param	string	$route		endere√ßo da rota (ex.: '^([\d]+)/([a-z0-9\-]+)$')
+	 * @param	string	$url		endere√ßo original (ex.: 'home/view/$1/$2')
 	 * @return	void
 	 */
 	public static function add($route, $url)
@@ -53,18 +53,19 @@ class Route
 	}
 	
 	/**
-	 * Verifica se a URL faz parte de alguma rota e pega os endereÁo verdadeiro
-	 * @param	string	$url	URL acessada pelo usu·rio
-	 * @return	array			retorna o nome do prefixo, do controller, da action e com os par‚metros baseado na rota
+	 * Verifica se a URL faz parte de alguma rota e pega os endere√ßo verdadeiro
+	 * @param	string	$url	URL acessada pelo usu√°rio
+	 * @return	array			retorna o nome do prefixo, do controller, da action e com os par√¢metros baseado na rota
 	 */
 	public static function exec($url)
 	{	
-		if((auto_dotjson || auto_dotxml) && preg_match('@\.(json|xml)$@', $url, $matches))
+		if((Config::get('auto_dotjson') || Config::get('auto_dotxml')) && preg_match('@\.(json|xml)$@', $url, $matches))
 		{
 			$args['dot'] = $matches[1];
 			$url = rtrim($url, $matches[0]);
-			define('is_autodot', $matches[1]);
 		}
+		define('is_autodot', isset($args['dot']));
+		define('IS_AUTODOT', isset($args['dot']));
 		
 		$url = trim(self::checkRoute($url), '/');
 		$urls = explode('/', $url);
@@ -77,8 +78,8 @@ class Route
 		
 		$args['controller']	= array_shift($urls);
 		$args['action']	= array_shift($urls);
-		if($args['prefix'])
-			$args['action'] = $args['prefix'] .'_'. ($args['action'] ? $args['action'] : default_action);
+		if(isset($args['prefix']))
+			$args['action'] = $args['prefix'] .'_'. (isset($args['action']) ? $args['action'] : Config::get('default_action'));
 		$args['params']	= $urls;
 		
 		return $args;
@@ -86,13 +87,14 @@ class Route
 	
 	/**
 	 * Pega a URL verdadeira a partir de uma rota
-	 * @param	string	$url	URL acessada pelo usu·rio
-	 * @return	string			retorna a URL verdadeira ou o prÛprio par‚metro caso n„o seja uma rota
+	 * @param	string	$url	URL acessada pelo usu√°rio
+	 * @return	string			retorna a URL verdadeira ou o pr√≥prio par√¢metro caso n√£o seja uma rota
 	 */
 	private static function checkRoute($url)
 	{	
 		$url = trim($url, '/');
 		$urls = explode('/', $url);
+		$lang = '';
 		if(self::isI18n($urls[0]))
 			$lang = array_shift($urls) .'/';
 		$url = implode('/', $urls);
@@ -107,9 +109,9 @@ class Route
 	}
 	
 	/**
-	 * Verifica se o comeÁo da URL È um prefixo
+	 * Verifica se o come√ßo da URL √© um prefixo
 	 * @param	string	$first		primeira parte da URL
-	 * @return	boolean				retorna true se for um prefixo, no contr·rio retorna false
+	 * @return	boolean				retorna true se for um prefixo, no contr√°rio retorna false
 	 */
 	private static function isPrefix($first)
 	{
@@ -123,12 +125,12 @@ class Route
 	}
 	
 	/**
-	 * Verifica se e o trecho da URL È internacionalizaÁ„o
+	 * Verifica se e o trecho da URL √© internacionaliza√ß√£o
 	 * @param	string			$first	primeiro trecho da URL
-	 * @return	boolean			retorna true se for internacionalizaÁ„o, no contr·rio retorna false
+	 * @return	boolean			retorna true se for internacionaliza√ß√£o, no contr√°rio retorna false
 	 */
 	private static function isI18n($first)
 	{
-		return $first == default_lang || (preg_match('/^([a-z]{2}|[a-z]{2}-[a-z]{2})$/',$first) && file_exists(root .'app/i18n/'. $first .'.lang'));
+		return $first == Config::get('default_lang') || (preg_match('/^([a-z]{2}|[a-z]{2}-[a-z]{2})$/',$first) && file_exists(root .'app/i18n/'. $first .'.lang'));
 	}
 }

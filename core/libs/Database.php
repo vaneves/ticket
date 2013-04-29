@@ -1,125 +1,139 @@
 <?php 
 /*
- * Copyright (c) 2011, Valdirene da Cruz Neves Júnior <linkinsystem666@gmail.com>
+ * Copyright (c) 2011-2012, Valdirene da Cruz Neves JÃºnior <linkinsystem666@gmail.com>
  * All rights reserved.
  */
 
 
 /**
- * Classe de persistência com o banco de dados. Implementa o padrão Singleton
+ * Classe de persistÃªncia com o banco de dados. Implementa os padrÃµes Factory e Singleton
  * 
- * @author		Valdirene da Cruz Neves Júnior <linkinsystem666@gmail.com>
- * @version		1
+ * @author		Valdirene da Cruz Neves JÃºnior <linkinsystem666@gmail.com>
+ * @version		2.2
  *
  */
 class Database 
 {
 	/**
-	 * Guarda a instância da classe Database, pois utiliza o padrão Singleton
+	 * Guarda as instÃ¢ncias da classe Database, pois utiliza o padrÃ£o Singleton
 	 * @var	object
 	 */
-	protected static $instance;
+	protected static $instances = array();
 	
 	/**
-	 * Guarda instâncias da classe DatabaseQuery
+	 * Guarda instÃ¢ncias da classe DatabaseQuery
 	 * @var	array
 	 */
 	protected $tables = array();
 	
 	/**
-	 * Guarda as SQL das operações de inert, update e delete
+	 * Guarda as configuraÃ§Ãµes
 	 * @var	array
 	 */
-	protected $operations = array();
-	
+	protected $config = array();
+
+
 	/**
-	 * Construtor da classe, protegido para não criar um instância sem utilizar o Singleton
+	 * Construtor da classe, protegido para nÃ£o criar um instÃ¢ncia sem utilizar o Singleton
 	 */
-	protected function __construct()
+	protected function __construct($config = null)
 	{
-		
+		$this->config = $config;
 	}
 	
 	/**
-	 * Método para instanciação do classe
-	 * @return	object 	retorna a instância da classe Database
+	 * MÃ©todo para instanciaÃ§Ã£o do classe
+	 * @return	object 	retorna a instÃ¢ncia da classe Database
 	 */
 	public static function getInstance()
 	{
-		if(!self::$instance)
-			self::$instance = new self();
-		return self::$instance;
+		$configs = Config::get('database');
+		
+		if(!isset($configs['default']))
+			throw new ConfigNotFoundException('A configuraÃ§Ã£o "database[default]" nÃ£o foi encontrada');
+		
+		$configs['default']['connection'] = 'default';
+		
+		if(!isset(self::$instances['default']))
+			self::$instances['default'] = new self($configs['default']);
+		return self::$instances['default'];
+	}
+	
+	public static function factory($config = 'default')
+	{
+		$configs = Config::get('database');
+		
+		if(!isset($configs[$config]))
+			throw new ConfigNotFoundException('A configuraÃ§Ã£o "database['. $config .']" nÃ£o foi encontrada');
+		
+		$configs[$config]['connection'] = $config;
+		
+		if(!isset(self::$instances[$config]))
+			self::$instances[$config] = new self($configs[$config]);
+		return self::$instances[$config];
 	}
 	
 	/**
-	 * Chamado automáticamente quando uma propriedade de Database for chamada e ela não existir. Cria uma nova instância de DatabaseQuery 
+	 * Chamado automÃ¡ticamente quando uma propriedade de Database for chamada e ela nÃ£o existir. Cria uma nova instÃ¢ncia de Datasource 
 	 * @param	string	$name	nome de uma tabela ou view do banco de dados
-	 * @return	object			retorna uma instância de DatabaseQuery
+	 * @return	Datasource		retorna uma instÃ¢ncia de Datasource
 	 */
 	public function __get($name)
 	{
-		if($this->tables[$name])
-			$this->operations = array_union($this->operations, $this->tables[$name]->getAndClearOperations());
-		return $this->tables[$name] = new DatabaseQuery($name);
+		return $this->tables[$name] = $this->datasource($name);
 	}
 	
 	/**
-	 * Submete para o banco de dados as operações realizadas nos models
-	 * @throws	TriladoException	disparada quando ocorrer alguma exceção do tipo SQLException
-	 * @throws	SQLException		disparada quando ocorrer alguma exceção no banco de dados
+	 * Submete para o banco de dados as operaÃ§Ãµes realizadas nos models
 	 * @return	void
 	 */
 	public function save()
 	{
 		foreach($this->tables as $entity)
-		{
-			$this->operations = array_union($this->operations, $entity->getAndClearOperations());
-			foreach($this->operations as $operation)
-			{
-				try
-				{
-					$stmt = DatabaseQuery::connection()->prepare($operation['sql']);
-					$status = $stmt->execute($operation['values']);
-					if(!$status)
-					{
-						$error = $stmt->errorInfo();
-						throw new TriladoException($error[2]);
-					}
-					if($operation['model'])
-						$key = $operation['model']->_setLastId($entity->lastInsertId());
-				}
-				catch(PDOException $ex)
-				{
-					throw new DatabaseException($ex->getMessage(), $ex->getCode());
-				}
-			}
-		}
+			$entity->save();
+	}
+	
+	private function datasource($entity = null)
+	{
+		$class = ucfirst(strtolower($this->config['type'])) . 'Datasource';
+		Import::load('datasource', array($class));
+		return new $class($this->config, $entity);
 	}
 	
 	/**
-	 * Inicioa uma transação
+	 * Executa uma instruÃ§Ã£o SQL sem a utilizaÃ§Ã£o de Model
+	 * @param	string	$sql	comando de acordo com o banco informado
+	 * @return	mixed			
+	 */
+	public function query($sql)
+	{
+		return $this->datasource()->query($sql);
+	}
+	
+	/**
+	 * Inicia uma transaÃ§Ã£o
 	 * @return	void
 	 */
 	public function transaction()
 	{
-		DatabaseQuery::connection()->beginTransaction();
+		return $this->datasource()->transaction();
 	}
 	
 	/**
-	 * Envia a transação
+	 * Envia a transaÃ§Ã£o
 	 * @return	void
 	 */
 	public function commit()
 	{
-		DatabaseQuery::connection()->commit();
+		return $this->datasource()->commit();
 	}
 	
 	/**
-	 * Cancela uma transação
+	 * Cancela uma transaÃ§Ã£o
 	 * @return	void
 	 */
 	public function rollback()
 	{
-		DatabaseQuery::connection()->rollBack();
+		return $this->datasource()->rollback();
 	}
 }

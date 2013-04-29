@@ -1,27 +1,28 @@
 <?php
 /*
- * Copyright (c) 2011, Valdirene da Cruz Neves J˙nior <linkinsystem666@gmail.com>
+ * Copyright (c) 2011-2012, Valdirene da Cruz Neves J√∫nior <linkinsystem666@gmail.com>
  * All rights reserved.
  */
 
 
 /**
- * ContÈm mÈtodo para facilitar a importaÁ„o de arquivos, como controllers, models e helpers
+ * Cont√©m m√©todo para facilitar a importa√ß√£o de arquivos, como controllers, models e helpers
  * 
- * @author	Valdirene da Cruz Neves J˙nior <linkinsystem666@gmail.com>
- * @version	1
+ * @author	Valdirene da Cruz Neves J√∫nior <linkinsystem666@gmail.com>
+ * @author	Diego Oliveira <diegopso2@gmail.com>
+ * @version	1.6
  *
  */
 class Import
 {
 	/**
-	 * Carrega um ou mais arquivos a partir de um diretÛrio
+	 * Carrega um ou mais arquivos a partir de um diret√≥rio
 	 * 
-	 * @param	string	$folder				indica o diretÛrio que ser„o carregados os arquivos, os valores possÌveis s„o 'core', 'exception', 'controller', 'model' e 'helper'
+	 * @param	string	$folder				indica o diret√≥rio que ser√£o carregados os arquivos, os valores poss√≠veis s√£o 'core', 'exception', 'controller', 'model' e 'helper'
 	 * @param	array	$class				um array com os nomes das classes
-	 * @throws	DirectoryNotFoundException	disparada cara o diretÛrio n„o conste na lista de diretÛrios padr„o
-	 * @throws	FileNotFoundException		disparada se o arquivo com o nome da classe n„o for encontrado
-	 * @throws	ClassNotFoundException		disparada se dentro do arquivo n„o existir a classe
+	 * @throws	DirectoryNotFoundException	disparada cara o diret√≥rio n√£o conste na lista de diret√≥rios padr√£o
+	 * @throws	FileNotFoundException		disparada se o arquivo com o nome da classe n√£o for encontrado
+	 * @throws	ClassNotFoundException		disparada se dentro do arquivo n√£o existir a classe
 	 * @return	void
 	 */
 	public static function load($folder, $class = array())
@@ -29,9 +30,12 @@ class Import
 		$folders = array();
 		$folders['core']		= 'core/libs/';
 		$folders['exception']	= 'core/libs/exceptions/';
+		$folders['cachesource']	= 'core/libs/cachesource/';
+		$folders['datasource']	= 'core/libs/datasource/';
 		$folders['controller']	= 'app/controllers/';
 		$folders['model']		= 'app/models/';
 		$folders['helper']		= 'app/helpers/';
+		$folders['vendor']		= 'app/vendors/';
 		
 		if(!array_key_exists($folder, $folders))
 			throw new DirectoryNotFoundException($folder .'s');
@@ -49,7 +53,7 @@ class Import
 	}
 	
 	/**
-	 * Importa as classes especÌficadas no par‚metro no diretÛrio do n˙cleo do framework
+	 * Importa as classes espec√≠ficadas no par√¢metro no diret√≥rio do n√∫cleo do framework
 	 * @param	string	$class1		nome da classe
 	 * @param	string	$classN		nome da classe
 	 * @return	void
@@ -61,11 +65,11 @@ class Import
 	}
 	
 	/**
-	 * Importa as classes especÌficadas no par‚metro no diretÛrio dos controllers
+	 * Importa as classes espec√≠ficadas no par√¢metro no diret√≥rio dos controllers
 	 * @param	string	$class1					nome da classe
 	 * @param	string	$classN					nome da classe
-	 * @throws	ControllerNotFoundException		disparado se o arquivo com o nome do controller n„o for encontrado
-	 * @throws	ClassNotFoundException			disparado se dentro do arquivo n„o existir uma classe com o nome do controller
+	 * @throws	ControllerNotFoundException		disparado se o arquivo com o nome do controller n√£o for encontrado
+	 * @throws	ClassNotFoundException			disparado se dentro do arquivo n√£o existir uma classe com o nome do controller
 	 * @return	void
 	 */
 	public static function controller()
@@ -73,7 +77,7 @@ class Import
 		$args = func_get_args();
 		foreach($args as $c)
 		{
-			$file = root . 'app/controllers/' . $c . '.php';
+			$file = ROOT . 'app/controllers/' . $c . '.php';
 			if(!file_exists($file))
 				throw new ControllerNotFoundException($c);
 			
@@ -85,7 +89,7 @@ class Import
 	}
 	
 	/**
-	 * Importa as classes especÌficadas no par‚metro no diretÛrio dos models
+	 * Importa as classes espec√≠ficadas no par√¢metro no diret√≥rio dos models
 	 * @param	string	$class1		nome da classe
 	 * @param	string	$classN		nome da classe
 	 * @return	void
@@ -97,7 +101,7 @@ class Import
 	}
 	
 	/**
-	 * Importa as classes especÌficadas no par‚metro no diretÛrio dos helpers
+	 * Importa as classes espec√≠ficadas no par√¢metro no diret√≥rio dos helpers
 	 * @param	string	$class1		nome da classe
 	 * @param	string	$classN		nome da classe
 	 * @return	void
@@ -109,26 +113,116 @@ class Import
 	}
 	
 	/**
-	 * Importa uma view especÌficada
-	 * @param	array	$vars			vari·veis a serem utilizadas na view
-	 * @param	string	$controller		nome do controller
+	 * Importa uma view espec√≠ficada
+	 * @param	array	$vars			vari√°veis a serem utilizadas na view
+	 * @param	string	$_controller		nome do controller
 	 * @param	string	$view			nome da view
-	 * @throws	FileNotFoundException	disparado se o arquivo n„o for encontrado
-	 * @return	string					retorna o conte˙do da view
+	 * @throws	FileNotFoundException	disparado se o arquivo n√£o for encontrado
+	 * @return	string					retorna o conte√∫do da view
 	 */
-	public static function view($vars, $controller, $view)
+	public static function view($vars, $_controller, $view)
 	{
-		$buffer = ob_get_clean();
 		ob_start();
+		
 		extract($vars);
-		$file = root . 'app/views/'. $controller .'/'. $view .'.php';
-		if(!file_exists($file))
-			throw new FileNotFoundException('views/'. $controller .'/'. $view .'.php');
 		
-		require_once $file;
+		$mobile = ROOT . 'app/views/'. $_controller .'/'. $view .'.mobile.php';
+		$tablet = ROOT . 'app/views/'. $_controller .'/'. $view .'.tablet.php';
 		
-		$content = ob_get_clean();
-		echo $buffer;
-		return $content;
+		if(!defined('IS_MOBILE') && !defined('IS_TABLET'))
+		{
+			$detect = new Mobile_Detect;
+			define('IS_MOBILE', $detect->isMobile() && !$detect->isTablet());
+			define('IS_TABLET', $detect->isTablet());
+		}
+		
+		if(Config::get('auto_tablet') && IS_TABLET && file_exists($tablet))
+		{
+			$file = $tablet;
+		}
+		elseif(Config::get('auto_mobile') && IS_MOBILE && file_exists($mobile))
+		{
+			$file = $mobile;
+		}
+		else
+		{
+			$file = ROOT . 'app/views/'. $_controller .'/'. $view .'.php';
+			if(!file_exists($file))
+				throw new FileNotFoundException('views/'. $_controller .'/'. $view .'.php');
+		}
+		
+		require $file;
+		
+		return ob_get_clean();
+	}
+	
+	/**
+	 * Importa as classes espec√≠ficadas no par√¢metro no diret√≥rio dos vendors
+	 * @param	string	$class1		nome da classe
+	 * @param	string	$classN		nome da classe
+	 * @return	void
+	 */
+	public static function vendor()
+	{
+		$args = func_get_args();
+		self::load('vendor', $args);
+	}
+	
+	/**
+	 * Armazena os diret√≥rios para carregamento autom√°tico de arquivos de c√≥digo fonte.
+	 * @var	array 
+	 */
+	private static $directories = array();
+	
+	/**
+	 * Fun√ß√£o que importa classes automaticamente, baseado nos diret√≥rios 
+	 * registrados pelo m√©todo Import::register($dir).
+	 * @param	string	$class	Nome da classe a ser carregada.
+	 * @return	void
+	 */
+	public static function autoload($class)
+	{
+		$key = 'Trilado.Import.Files';
+		
+		$cache = Cache::factory();
+		if(Cache::enabled() && $cache->has($key))
+		{
+			$files = $cache->read($key);
+			if(isset($files[$class]))
+			{
+				require_once $files[$class];
+				return;
+			}
+		}
+		
+		foreach(self::$directories as $dir)
+		{
+			$file = ROOT . $dir .  $class .'.php';
+			if(file_exists($file))
+			{
+				require_once($file);
+				
+				$files = $cache->read($key);
+				if($files === false)
+					$files = array();
+				
+				$files[$class] = $file;
+				if(Cache::enabled())
+					$cache->write($key, $files, CACHE_TIME);
+				
+				return;
+			}
+		}
+	}
+	
+	/**
+	 * Registra diret√≥rios de arquivos de c√≥digo fonte para carregamento autom√°tico.
+	 * @param	string	$dir	diret√≥rio a ser inserido, come√ßando da raiz do framework
+	 * @return	void
+	 */
+	public static function register($dir)
+	{
+		$dir = rtrim($dir, '/') . '/';
+		self::$directories[] = $dir;
 	}
 }

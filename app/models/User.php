@@ -19,8 +19,8 @@ class User extends Model
 	
 	/**
 	 * @Required()
-	 * @Label("E-mail")
-	 * @Regex(Pattern="^([a-zA-Z0-9\.\-_]+)@([a-zA-Z0-9\.\-]+)\.([a-z]{2,})$",Message="EndereÁo de e-mail est· inv·lido")
+	 * @Label("Email")
+	 * @Regex(Pattern="^([a-zA-Z0-9\.\-_]+)@([a-zA-Z0-9\.\-]+)\.([a-z]{2,})$",Message="Endere√ßo de e-mail est√° inv√°lido")
 	 * @Column(Type="String")
 	 */
 	public $Email;
@@ -37,7 +37,6 @@ class User extends Model
 	 */
 	public $Type;
 	
-	/** @HasMany(Model="Ticket",Property="UserId") */
 	public $Tickers;
 	
 	public static function login($email, $password)

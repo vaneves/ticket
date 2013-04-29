@@ -5,6 +5,7 @@ class TicketController extends Controller
 	
 	public function add()
 	{
+		$ticket = new Ticket();
 		if(is_post)
 		{
 			try
@@ -15,22 +16,33 @@ class TicketController extends Controller
 				$ticket->Date	= $date->format("Y-m-d H:i:s");
 				$ticket->Status	= 0;
 				$ticket->Attachment = Ticket::upload('File');
+				
+				if(Auth::is('client'))
+				{
+					$ticket->Name	= Session::get('user')->Name;
+					$ticket->Email	= Session::get('user')->Email;
+					$ticket->UserId	= Session::get('user')->Id;
+				}
+				
 				$ticket->save();
-				$this->_flash('success', 'Ticket criado com sucesso');
+				
+				$this->_flash('alert', 'Ticket criado com sucesso');
 			}
 			catch(ValidationException $e)
 			{
-				$this->_flash('error', $e->getMessage());
+				$this->_flash('alert alert-error', $e->getMessage());
 			}
 			catch(Exception $e)
 			{
-				$this->_flash('error', 'Ocorreu um erro ao tentar enviar seu ticket');
+				$this->_flash('alert alert-error', 'Ocorreu um erro ao tentar enviar seu ticket');
 			}
 		}
 		return $this->_view($ticket);
 	}
-	public function open()
+	
+	public function check()
 	{
+		$data = new Ticket();
 		if(is_post)
 		{
 			$data = $this->_data();
@@ -43,33 +55,40 @@ class TicketController extends Controller
 			}
 			else
 			{
-				$this->_flash('error', 'E-mail ou ID inválido');
+				$this->_flash('alert alert-error', 'E-mail ou ID invÃ¡lido');
 			}
 		}
 		return $this->_view($data);
 	}
 	
 	/**
-	 * @Auth("ticket")
+	 * @Auth("client","ticket")
 	 */
 	public function view($id = 1)
 	{
 		$tickets = Ticket::view($id);
-		return $this->_view($tickets);
+		 if(count($tickets) && $tickets[0]->IdParent == null)
+			 return $this->_view($tickets);
+		 
+		 return $this->_snippet('notfound');
 	}
 	
 	/**
-	 * @Auth("ticket")
+	 * @Auth("client","ticket")
 	 */
 	public function reply($id)
 	{
 		if(is_post)
 		{
 			$parent = Ticket::get($id);
-			if($parent)
+			if($parent && $parent->Status != 2)
 			{
 				try
 				{
+					$parent->Status		= 0;
+					$parent->IdParent	= null;
+					$parent->save();
+					
 					$date = new DateTime('now');
 					
 					$ticket = $this->_data(new Ticket());
@@ -78,119 +97,98 @@ class TicketController extends Controller
 					$ticket->IdParent	= (int)$id;
 					$ticket->Subject	= $parent->Subject;
 					$ticket->Priority	= $parent->Priority;
-					$ticket->Email		= Session::get('ticket')->Email;
+					
+					$session = 'user';
+					if(Auth::is('ticket'))
+						$session = 'ticket';
+					
+					$ticket->Name		= Session::get($session)->Name;
+					$ticket->Email		= Session::get($session)->Email;
 					$ticket->Attachment = Ticket::upload('File');
+					$ticket->Note		= '';
+					
 					$ticket->save();
-					$this->_flash('success', 'Ticket respondido com sucesso');
+					
+					$this->_flash('alert', 'Ticket respondido com sucesso');
 				}
 				catch(ValidationException $e)
 				{
-					$this->_flash('error', $e->getMessage());
+					$this->_flash('alert alert-error', $e->getMessage());
 				}
 				catch(Exception $e)
 				{
-					$this->_flash('error', 'Ocorreu um erro ao tentar enviar sua resposta');
+					$this->_flash('alert alert-error', 'Ocorreu um erro ao tentar enviar sua resposta');
 				}
 				$this->_redirect('~/ticket/view/'. $id);
 			}
-			else
-			{
-				return $this->_content('Ticket não encontrado');
-			}
+			return $this->_snippet('notfound');
 		}
+		return $this->_snippet('badrequest');
 	}
 	
 	/**
 	 * @Auth("client")
 	 */
-	public function client_add()
-	{
-		if(is_post)
-		{
-			try
-			{
-				$date = new DateTime('now');
-				
-				$ticket = $this->_data(new Ticket());
-				$ticket->Date	= $date->format("Y-m-d H:i:s");
-				$ticket->Name	= Session::get('user')->Name;
-				$ticket->Email	= Session::get('user')->Email;
-				$ticket->Status	= 0;
-				$ticket->Attachment = Ticket::upload('File');
-				$ticket->save();
-				$this->_flash('success', 'Ticket criado com sucesso');
-			}
-			catch(ValidationException $e)
-			{
-				$this->_flash('error', $e->getMessage());
-			}
-			catch(Exception $e)
-			{
-				$this->_flash('error', 'Ocorreu um erro ao tentar enviar seu ticket');
-			}
-		}
-		return $this->_view($ticket);
-	}
-	
-	/**
-	 * @Auth("client")
-	 */
-	public function client_list($p = 1, $o = 'Id', $t = 'DESC')
+	public function my($p = 1, $o = 'Id', $t = 'DESC')
 	{
 		$tickets = Ticket::client_all(Session::get('user')->Email, $p, 20, $o, $t);
 		return $this->_view($tickets);
 	}
 	
 	/**
-	 * @Auth("client")
+	 * @Auth("client","ticket")
 	 */
-	public function client_view($id)
+	public function close($id)
 	{
-		$tickets = Ticket::view($id);
-		return $this->_view('view', $tickets);
+		$ticket = Ticket::get($id);
+		if($ticket && $ticket->Email == Session::get('user')->Email)
+		{
+			try
+			{
+				$ticket->Status		= 2;
+				$ticket->IdParent	= null;
+				$ticket->save();
+				$this->_flash('alert', 'Ticket fechado com sucesso');
+			}
+			catch(ValidationException $e)
+			{
+				$this->_flash('alert alert-error', $e->getMessage());
+			}
+			catch(Exception $e)
+			{
+				$this->_flash('alert alert-error', 'Ocorreu um erro ao tentar fechar o ticket');
+			}
+			$this->_redirect('~/ticket/view/'. $id);
+		}
+		return $this->_snippet('notfound');
 	}
 	
 	/**
-	 * @Auth("client")
+	 * @Auth("client","ticket")
 	 */
-	public function client_reply($id)
+	public function open($id)
 	{
-		if(is_post)
+		$ticket = Ticket::get($id);
+		if($ticket && $ticket->Email == Session::get('user')->Email)
 		{
-			$parent = Ticket::get($id);
-			if($parent)
+			try
 			{
-				try
-				{
-					$date = new DateTime('now');
-					
-					$ticket = $this->_data(new Ticket());
-					$ticket->Date		= $date->format("Y-m-d H:i:s");
-					$ticket->Status		= 0;
-					$ticket->IdParent	= (int)$id;
-					$ticket->Subject	= $parent->Subject;
-					$ticket->Priority	= $parent->Priority;
-					$ticket->Email		= Session::get('user')->Email;
-					$ticket->Name		= Session::get('user')->Name;
-					$ticket->Attachment = Ticket::upload('File');
-					$ticket->save();
-					$this->_flash('success', 'Ticket respondido com sucesso');
-				}
-				catch(ValidationException $e)
-				{
-					$this->_flash('error', $e->getMessage());
-				}
-				catch(Exception $e)
-				{
-					$this->_flash('error', 'Ocorreu um erro ao tentar enviar sua resposta');
-				}
-				$this->_redirect('~/ticket/view/'. $id);
+				$ticket->Status		= 0;
+				$ticket->IdParent	= null;
+				$ticket->save();
+				$this->_flash('alert', 'Ticket aberto com sucesso');
 			}
-			else
+			catch(ValidationException $e)
 			{
-				return $this->_snippet('notfound','Ticket não encontrado');
+				$this->_flash('alert alert-error', $e->getMessage());
 			}
+			catch(Exception $e)
+			{
+				$this->_flash('alert alert-error', 'Ocorreu um erro ao tentar abrir o ticket');
+			}
+			$this->_redirect('~/ticket/view/'. $id);
 		}
+		return $this->_snippet('notfound');
 	}
 	
 	/**
@@ -207,83 +205,9 @@ class TicketController extends Controller
 	 */
 	public function admin_list_status($s = 'open', $p = 1, $o = 'Id', $t = 'DESC')
 	{
-		$status = array('open' => 0, 'closed' => 1, 'answered' => 2);
+		$status = array('open' => 0, 'answered' => 1, 'closed' => 2);
 		$tickets = Ticket::admin_all_status($status[$s], $p, 20, $o, $t);
 		return $this->_view($tickets);
-	}
-	
-	/**
-	 * @Auth("admin","employee")
-	 */
-	public function admin_add()
-	{
-		if(is_post)
-		{
-			try
-			{
-				$date = new DateTime('now');
-				
-				$ticket = $this->_data(new Ticket());
-				$ticket->Date	= $date->format("Y-m-d H:i:s");
-				$ticket->Status	= 0;
-				$ticket->Attachment = Ticket::upload('File');
-				$ticket->save();
-				$this->_flash('success', 'Ticket criado com sucesso');
-			}
-			catch(ValidationException $e)
-			{
-				$this->_flash('error', $e->getMessage());
-			}
-			catch(Exception $e)
-			{
-				$this->_flash('error', 'Ocorreu um erro ao tentar enviar seu ticket');
-			}
-		}
-		return $this->_view($ticket);
-	}
-	
-	/**
-	 * @Auth("admin","employee")
-	 */
-	public function admin_edit($id)
-	{
-		$ticket = Ticket::get($id);
-		if($ticket)
-		{
-			if($ticket->Email == Session::get('usuario')->Email)
-			{
-				if(is_post)
-				{
-					try
-					{
-						$date = new DateTime('now');
-						
-						$ticket = $this->_data($ticket);
-						$ticket->Id	= $id;
-						$ticket->Attachment = Ticket::upload('File');
-						$ticket->save();
-						$this->_flash('success', 'Ticket atualizado com sucesso');
-					}
-					catch(ValidatException $e)
-					{
-						$this->_flash('error', $e->getMessage());
-					}
-					catch(Exception $e)
-					{
-						$this->_flash('error', 'Ocorreu um erro ao tentar atualizar o ticket');
-					}
-				}
-			}
-			else
-			{
-				return $this->_snippet('notfound','Você não tem permissão para editar esse ticket');
-			}
-		}
-		else
-		{
-			return $this->_snippet('notfound','Ticket não encontrado');
-		}
-		return $this->_view($ticket);
 	}
 	
 	/**
@@ -296,7 +220,7 @@ class TicketController extends Controller
 	}
 	
 	/**
-	 * @Auth("user")
+	 * @Auth("admin","employee")
 	 */
 	public function admin_reply($id)
 	{
@@ -307,6 +231,10 @@ class TicketController extends Controller
 			{
 				try
 				{
+					$parent->Status		= 1;
+					$parent->IdParent	= null;
+					$parent->save();
+					
 					$date = new DateTime('now');
 					
 					$ticket = $this->_data(new Ticket());
@@ -315,27 +243,87 @@ class TicketController extends Controller
 					$ticket->IdParent	= (int)$id;
 					$ticket->Subject	= $parent->Subject;
 					$ticket->Priority	= $parent->Priority;
-					$ticket->Email		= Session::get('user')->Email;
 					$ticket->Name		= Session::get('user')->Name;
+					$ticket->Email		= Session::get('user')->Email;
 					$ticket->Attachment = Ticket::upload('File');
+					
 					$ticket->save();
-					$this->_flash('success', 'Ticket respondido com sucesso');
+					
+					$this->_flash('alert', 'Ticket respondido com sucesso');
 				}
 				catch(ValidationException $e)
 				{
-					$this->_flash('error', $e->getMessage());
+					$this->_flash('alert alert-error', $e->getMessage());
 				}
 				catch(Exception $e)
 				{
-					$this->_flash('error', 'Ocorreu um erro ao tentar enviar sua resposta');
+					$this->_flash('alert alert-error', 'Ocorreu um erro ao tentar enviar sua resposta');
 				}
-				$this->_redirect('~/ticket/view/'. $id);
+				$this->_redirect('~/admin/ticket/view/'. $id);
 			}
-			else
-			{
-				return $this->_content('Ticket não encontrado');
-			}
+			return $this->_snippet('notfound');
 		}
+		return $this->_snippet('badrequest');
+	}
+	
+	/**
+	 * @Auth("admin","employee")
+	 */
+	public function admin_close($id)
+	{
+		$ticket = Ticket::get($id);
+		if($ticket)
+		{
+			try
+			{
+				$ticket->Status		= 2;
+				$ticket->IdParent	= null;
+				
+				$ticket->save();
+				
+				$this->_flash('alert', 'Ticket fechado com sucesso');
+			}
+			catch(ValidationException $e)
+			{
+				$this->_flash('alert alert-error', $e->getMessage());
+			}
+			catch(Exception $e)
+			{
+				$this->_flash('alert alert-error', 'Ocorreu um erro ao tentar fechar o ticket');
+			}
+			$this->_redirect('~/admin/ticket/view/'. $id);
+		}
+		return $this->_snippet('notfound');
+	}
+	
+	/**
+	 * @Auth("admin","employee")
+	 */
+	public function admin_open($id)
+	{
+		$ticket = Ticket::get($id);
+		if($ticket)
+		{
+			try
+			{
+				$ticket->Status		= 0;
+				$ticket->IdParent	= null;
+				
+				$ticket->save();
+				
+				$this->_flash('alert', 'Ticket aberto com sucesso');
+			}
+			catch(ValidationException $e)
+			{
+				$this->_flash('alert alert-error', $e->getMessage());
+			}
+			catch(Exception $e)
+			{
+				$this->_flash('alert alert-error', 'Ocorreu um erro ao tentar abrir o ticket');
+			}
+			$this->_redirect('~/admin/ticket/view/'. $id);
+		}
+		return $this->_snippet('notfound');
 	}
 	
 	/**
@@ -346,30 +334,23 @@ class TicketController extends Controller
 		$ticket = Ticket::get($id);
 		if($ticket)
 		{
-			if($ticket->Email == Session::get('user')->Email || Session::get('user')->Type === 0)
+			try
 			{
-				try
-				{
-					$ticket->delete();
-					$this->_flash('success', 'Ticket deletado com sucesso');
-				}
-				catch(ValidationException $e)
-				{
-					$this->_flash('error', $e->getMessage());
-				}
-				catch(Exception $e)
-				{
-					$this->_flash('error', 'Ocorreu um erro ao tentar deletar o ticket');
-				}
+				$ticket->delete();
+				$this->_flash('alert', 'Ticket deletado com sucesso');
 			}
-			else
+			catch(ValidationException $e)
 			{
-				return $this->_snippet('notfound','Você não tem permissão para deletar esse ticket');
+				$this->_flash('alert alert-error', $e->getMessage());
+			}
+			catch(Exception $e)
+			{
+				$this->_flash('alert alert-error', 'Ocorreu um erro ao tentar deletar o ticket');
 			}
 		}
 		else
 		{
-			return $this->_snippet('notfound','Ticket não encontrado');
+			return $this->_snippet('notfound');
 		}
 		return $this->_redirect('~/admin/ticket/list');
 	}
