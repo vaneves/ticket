@@ -40,12 +40,12 @@ Config::set('default_master', 'template');
 /**
  * Controller padrão
  */
-Config::set('default_controller', 'Home');
+Config::set('default_controller', 'Ticket');
 
 /**
  * Action padrão
  */
-Config::set('default_action', 'index');
+Config::set('default_action', 'welcome');
 
 /**
  * Página de login
@@ -75,7 +75,7 @@ Config::set('auto_mobile', true);
 /**
  * Define se as requisições via tablet irão carregar os templates  específicos, se existirem, para versão tablet
  */
-Config::set('auto_tablet', false);
+Config::set('auto_tablet', true);
 
 /**
  * Define se as requisições AJAX devem retornar automaticamente conteúdo em JSON
