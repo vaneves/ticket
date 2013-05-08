@@ -12,6 +12,7 @@
  * Também é possível criar prefixos. Veja um exemplo:
  * Route::prefix('admin');
  */
+Route::add('^/?$', 'ticket/check');
  Route::add('^login$', 'user/login');
  Route::add('^logout$', 'user/logout');
  Route::add('^register$', 'user/register');

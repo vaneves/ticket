@@ -1,7 +1,9 @@
 <div class="row-fluid">
-	
+	<div class="page-header">
+		<h2>Meus Tickets</h2>
+	</div>
 	<div class="btn-controls">
-		<div class="left">
+		<div class="left hidden-phone">
 			<a href="~/ticket/add" class="btn btn-primary">Criar Ticket</a>
 		</div>
 		<div class="right">
@@ -13,7 +15,7 @@
 	<table class="table table-striped">
 		<thead>
 			<tr>
-				<th>Número</th>
+				<th class="hidden-phone">Número</th>
 				<?php $t = $t == 'DESC' ? 'ASC': 'DESC' ?>
 				<th><a href="~/ticket/list/<?= $p ?>/status/<?= $t ?>/" class="<?= $o == 'status' ? $t : '' ?>">Status</a></th>
 				<th><a href="~/ticket/list/<?= $p ?>/subject/<?= $t ?>/" class="<?= $o == 'subject' ? $t : '' ?>">Assunto</a></th>
@@ -21,21 +23,20 @@
 			</tr>
 		</thead>
 		<tbody>
-			<?php $status = array('<span class="label label-warning">Aberto</span>','<span class="label label-success">Respondido</span>','<span class="label">Fechado</span>'); ?>
 			<?php foreach($model->Data as $ticket): ?>
 			<tr>
-				<td>#<?= $ticket->Id ?></td>
-				<td><?= $status[$ticket->Status] ?></td>
+				<td class="hidden-phone">#<?= $ticket->Id ?></td>
+				<td><span class="label <?= Label::status_class($ticket->Status) ?>"><?= Label::status($ticket->Status, true) ?></span></td>
 				<td>
 					<a href="~/ticket/view/<?= $ticket->Id ?>"><?= $ticket->Subject ?></a>
 				</td>
-				<td><?= date('d M Y H:i', strtotime($ticket->Date)) ?></td>
+				<td><?= date('d/m H:i', strtotime($ticket->Date)) ?></td>
 			</tr>
 			<?php endforeach ?>
 		</tbody>
 	</table>
 	<div class="btn-controls">
-		<div class="left">
+		<div class="left hidden-phone">
 			<a href="~/ticket/add" class="btn btn-primary">Criar Ticket</a>
 		</div>
 		<div class="right">

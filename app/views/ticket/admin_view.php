@@ -3,24 +3,25 @@
 		<h2><?= $model[0]->Subject ?></h2>
 	</div>
 	<div class="well well-small">
-		<div class="row-fluid">
-			<div class="span3 status">
-				<div class=""><b>Criado</b></div>
-				<div><?= date('d/m/Y H:i:s', strtotime($model[0]->Date)) ?></div>
-			</div>
-			<div class="span3 status">
-				<div class=""><b>Tempo</b></div>
-				<div>00:00</div>
-			</div>
-			<div class="span3 status">
-				<div class=""><b>Prioridade</b></div>
-				<?php $priority = array('Baixa','Média','Alta') ?>
-				<div><?= $priority[$model[0]->Priority] ?></div>
-			</div>
-			<div class="span3 status">
-				<div class=""><b>Status</b></div>
-				<?php $status = array('<span class="label label-success">Aberto</span>','<span class="label label-warning">Respondido</span>','<span class="label label-important">Fechado</span>'); ?>
-				<div><?= $status[$model[0]->Status] ?></div>
+		<div class="container-fluid">
+			<div class="row-fluid">
+				<div class="span3 status">
+					<div class=""><b>Criado</b></div>
+					<div><?= date('d/m/Y H:i:s', strtotime($model[0]->Date)) ?></div>
+				</div>
+				<div class="span3 status">
+					<div class=""><b>Tempo</b></div>
+					<div><?= $model[0]->Time ?></div>
+				</div>
+				<div class="span3 status">
+					<div class=""><b>Prioridade</b></div>
+					<?php $priority = array('Baixa','Média','Alta') ?>
+					<div><?= $priority[$model[0]->Priority] ?></div>
+				</div>
+				<div class="span3 status">
+					<div class=""><b>Status</b></div>
+					<div><span class="label <?= Label::status_class($model[0]->Status) ?>"><?= Label::status($model[0]->Status, true) ?></span></div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -30,6 +31,11 @@
 			<h3>Ticket #<?= $id ?></h3>
 		</div>
 		<div class="right">
+			<?php if($model[0]->Status != 3): ?>
+			<a href="~/admin/ticket/start/<?= $id ?>" class="btn btn-inverse"><i class="icon-time icon-white"></i> Iniciar</a>
+			<?php elseif($model[0]->Status == 3): ?>
+			<a href="~/admin/ticket/stop/<?= $id ?>" class="btn btn-inverse"><i class="icon-time icon-white"></i> Parar</a>
+			<?php endif ?>
 			<?php if($model[0]->Status != 2): ?>
 				<a href="~/admin/ticket/close/<?= $id ?>" class="btn btn-danger"><i class="icon-ban-circle icon-white"></i> Fechar</a>
 			<?php else: ?>
@@ -40,11 +46,12 @@
 	</div>
 
 	<div class="topic-view">
+	<?php $me = Session::get('user') ?>
 	<?php foreach($model as $ticket): ?>
-		<div class="row-fluid">
+		<div class="row-fluid line <?= $ticket->Email != $me->Email ? 'response' : '' ?>">
 			<div class="span3">
 				<div class="topic-profile">
-					<img src="http://www.gravatar.com/avatar/<?= md5(strtolower(trim($ticket->Email))) ?>?s=50&d=mm" alt="<?= $ticket->Name ?>" class="img-polaroid" />
+					<img src="http://www.gravatar.com/avatar/<?= md5(strtolower(trim($ticket->Email))) ?>?s=50&d=mm" alt="<?= $ticket->Name ?>" class="img-polaroid hidden-phone" />
 					<div class="topic-profile-info">
 						<div><b><?= $ticket->Name ?></b></div>
 					</div>
@@ -97,7 +104,7 @@
 				</div>
 			</div>
 			<div class="row-fluid">
-				<label>Anexo</label>
+				<label>Anexo (imagem)</label>
 				<input type="file" name="File" />
 			</div>
 			<br>

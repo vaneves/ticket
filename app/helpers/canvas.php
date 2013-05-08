@@ -116,6 +116,8 @@ class canvas {
 	{
 		// imagem de origem
 		$pathinfo 			= pathinfo( $this->origem );
+		if(!isset($pathinfo['extension']))
+			$pathinfo['extension'] = '';
 		$this->extensao 	= strtolower( $pathinfo['extension'] );
 		$this->arquivo		= $pathinfo['basename'];
 		$this->diretorio	= $pathinfo['dirname'];

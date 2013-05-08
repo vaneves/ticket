@@ -1,21 +1,22 @@
 <div class="row-fluid">
 	<div class="span8">
-		<div class="thumbnail">
-			<p></p>
-		</div>
-	</div>
-	<div class="span4">
-		<div class="thumbnail">
-			<h2>Acesso Interno</h2>
-
-			<form method="post" action="">
-				<?= BForm::input('E-mail', 'Email', null, 'span12') ?>
-				<?= BForm::password('Senha', 'Password', null, 'span12') ?>
+		<form method="post" action="">
+			<fieldset>
+				<legend>Acesso Interno</legend>
+				<?= BForm::input('E-mail', 'Email', null, 'span9') ?>
+				<?= BForm::password('Senha', 'Password', null, 'span9') ?>
 
 				<button type="submit" class="btn btn-primary">Entrar</button>
-			</form>
-			<hr>
-			<button type="submit" class="btn btn-large btn-block">Cadastre-se</button>
+			</fieldset>
+		</form>
+	</div>
+	<div class="span4 hidden-phone">
+		<div class="thumbnail">
+			<p><b>Já tem cadastro?</b></p>
+			<p>Se você já efetuou o cadastro, entre e veja o histórico e andamento de todos os seus tickets.</p>
+			
+			<p><b>Não tem cadastro?</b></p>
+			<p>Você pode cadastrar-se gratuitamente.</p>
 		</div>
 	</div>
 </div>

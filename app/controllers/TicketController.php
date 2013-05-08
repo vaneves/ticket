@@ -27,6 +27,22 @@ class TicketController extends Controller
 				$ticket->save();
 				
 				$this->_flash('alert', 'Ticket criado com sucesso');
+				
+				try
+				{
+					$mail = new Mail();
+					$mail->setSubject('[Ticket ID: '. $ticket->Id .'] ' . html_entity_decode($ticket->Subject));
+					$mail->setFrom($ticket->Email, html_entity_decode($ticket->Name));
+					$mail->addTo('linkinsystem666@gmail.com', 'Van Neves');
+					$mail->setTemplate('mail', 'new', array('name' => 'Van Neves', 'id' => $ticket->Id));
+					
+					$response = $mail->send();
+				}
+				catch (Exception $e)
+				{
+					
+				}
+				$ticket = new Ticket();
 			}
 			catch(ValidationException $e)
 			{
@@ -207,7 +223,7 @@ class TicketController extends Controller
 	{
 		$status = array('open' => 0, 'answered' => 1, 'closed' => 2);
 		$tickets = Ticket::admin_all_status($status[$s], $p, 20, $o, $t);
-		return $this->_view($tickets);
+		return $this->_view('admin_list', $tickets);
 	}
 	
 	/**
@@ -320,6 +336,86 @@ class TicketController extends Controller
 			catch(Exception $e)
 			{
 				$this->_flash('alert alert-error', 'Ocorreu um erro ao tentar abrir o ticket');
+			}
+			$this->_redirect('~/admin/ticket/view/'. $id);
+		}
+		return $this->_snippet('notfound');
+	}
+	
+	/**
+	 * @Auth("admin","employee")
+	 */
+	public function admin_start($id)
+	{
+		$ticket = Ticket::get($id);
+		if($ticket)
+		{
+			try
+			{
+				$ticket->Status		= 3;
+				$ticket->IdParent	= null;
+				
+				$ticket->save();
+				
+				Session::set('timer', time());
+				
+				$this->_flash('alert', 'A contagem de tempo foi iniciada');
+			}
+			catch(ValidationException $e)
+			{
+				$this->_flash('alert alert-error', $e->getMessage());
+			}
+			catch(Exception $e)
+			{
+				$this->_flash('alert alert-error', 'Ocorreu um erro ao tentar iniciars a contagem de tempo');
+			}
+			$this->_redirect('~/admin/ticket/view/'. $id);
+		}
+		return $this->_snippet('notfound');
+	}
+	
+	/**
+	 * @Auth("admin","employee")
+	 */
+	public function admin_stop($id)
+	{
+		$ticket = Ticket::get($id);
+		if($ticket)
+		{
+			try
+			{
+				$time_start = Session::get('timer');
+				
+				if($time_start)
+				{
+					$date = new DateTime(date('Y-m-d H:i:s', $time_start));
+					$diff = $date->diff(new DateTime(date('Y-m-d H:i:s', time())));
+
+					$date = new DateTime($ticket->Time);
+					$date->add($diff);
+
+					$ticket->Status		= 4;
+					$ticket->IdParent	= null;
+					$ticket->Time		= $date->format('H:i:s');
+
+					$ticket->save();
+
+					Session::del('timer');
+					
+					$this->_flash('alert', 'A contagem de tempo foi encerrada, totalizando em ' . $date->format('H:i:s'));
+				}
+				else
+				{
+					$this->_flash('alert alert-error', 'O tempo inicial não foi encontrado');
+				}
+			}
+			catch(ValidationException $e)
+			{
+				$this->_flash('alert alert-error', $e->getMessage());
+			}
+			catch(Exception $e)
+			{
+				$this->_flash('alert alert-error', 'Ocorreu um erro ao tentar encerrar a contagem de tempo');
 			}
 			$this->_redirect('~/admin/ticket/view/'. $id);
 		}

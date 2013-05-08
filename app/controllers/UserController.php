@@ -55,7 +55,7 @@ class UserController extends Controller
 				
 				Session::set('user', $user);
 				Auth::set($roles[$user->Type]);
-				$this->_redirect('~/welcome');
+				$this->_redirect('~/');
 			}
 			else
 			{

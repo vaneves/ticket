@@ -1,30 +1,29 @@
 <div class="row-fluid">
 	<div class="span8">
 		<div class="">
-			<h2>Efetuar Cadastro</h2>
-
 			<form method="post" action="">
-				<?= BForm::input('Nome', 'Name', $model->Name, 'span9') ?>
-				<?= BForm::input('E-mail', 'Email', $model->Email, 'span9') ?>
-				<?= BForm::password('Senha', 'Password', null, 'span9') ?>
-				<?= BForm::password('Confirmar Senha', 'Confirm', null, 'span9') ?>
+				<fieldset>
+					<legend>Efetuar Cadastro</legend>
+					<?= BForm::input('Nome', 'Name', $model->Name, 'span8') ?>
+					<?= BForm::input('E-mail', 'Email', $model->Email, 'span8') ?>
+					<div class="row-fluid">
+						<div class="span4">
+							<?= BForm::password('Senha', 'Password', null, 'span12') ?>
+						</div>
+						<div class="span4">
+							<?= BForm::password('Confirmar Senha', 'Confirm', null, 'span12') ?>
+						</div>
+					</div>
 
-				<button type="submit" class="btn btn-primary">Cadastrar-me</button>
+					<button type="submit" class="btn btn-primary">Cadastrar</button>
+				</fieldset>
 			</form>
 		</div>
 	</div>
-	<div class="span4">
+	<div class="span4 hidden-phone">
 		<div class="thumbnail">
-			<h3>Fazer Login</h3>
-
-			<form method="post" action="~/login">
-				<?= BForm::input('E-mail', 'Email', null, 'span12') ?>
-				<?= BForm::password('Senha', 'Password', null, 'span12') ?>
-
-				<button type="submit" class="btn">Entrar</button>
-			</form>
-			<hr>
-			<button type="submit" class="btn btn-large btn-block">Cadastre-se</button>
+			<p><b>Cadastre-se e tenha mais vantagens</b></p>
+			<p>Efetue o cadastro e veja o histórico de todos os seus tickets. Assim não precisará decorar o número para pode visualizá-los</p>
 		</div>
 	</div>
 </div>

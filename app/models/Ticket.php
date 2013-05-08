@@ -78,6 +78,11 @@ class Ticket extends Model
 	 */
 	public $UserId;
 	
+	/**
+	 * @Column(Type="String")
+	 */
+	public $Time;
+	
 	public $User;
 	
 	public static function upload($file)
