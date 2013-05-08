@@ -34,7 +34,7 @@ class TicketController extends Controller
 					$mail->setSubject('[Ticket ID: '. $ticket->Id .'] ' . html_entity_decode($ticket->Subject));
 					$mail->setFrom($ticket->Email, html_entity_decode($ticket->Name));
 					$mail->addTo('linkinsystem666@gmail.com', 'Van Neves');
-					$mail->setTemplate('mail', 'new', array('name' => 'Van Neves', 'id' => $ticket->Id));
+					$mail->setTemplate('mail', 'new', array('name' => 'Van Neves', 'id' => $ticket->Id, 'code' => Security::encrypt($ticket->Id, Config::get('code_key'))));
 					
 					$response = $mail->send();
 				}
@@ -80,12 +80,27 @@ class TicketController extends Controller
 	/**
 	 * @Auth("client","ticket")
 	 */
-	public function view($id = 1)
+	public function view($id)
 	{
 		$tickets = Ticket::view($id);
 		 if(count($tickets) && $tickets[0]->IdParent == null)
 			 return $this->_view($tickets);
 		 
+		 return $this->_snippet('notfound');
+	}
+	
+	public function view_free($id, $code)
+	{
+		$id = Security::decrypt($code, Config::get('code_key'));
+		
+		$tickets = Ticket::view($id);
+		 if(count($tickets) && $tickets[0]->IdParent == null)
+		 {
+			 Auth::set('ticket');
+			 Session::set('ticket', $tickets[0]);
+				
+			 return $this->_view('view', $tickets);
+		 }
 		 return $this->_snippet('notfound');
 	}
 	
@@ -126,6 +141,21 @@ class TicketController extends Controller
 					$ticket->save();
 					
 					$this->_flash('alert', 'Ticket respondido com sucesso');
+					
+					try
+					{
+						$mail = new Mail();
+						$mail->setSubject('[Ticket ID: '. $ticket->IdParent .'] ' . html_entity_decode($ticket->Subject));
+						$mail->setFrom($ticket->Email, html_entity_decode($ticket->Name));
+						$mail->addTo('linkinsystem666@gmail.com', 'Van Neves');
+						$mail->setTemplate('mail', 'reply', array('name' => 'Van Neves', 'id' => $ticket->IdParent, 'code' => Security::encrypt($ticket->IdParent, Config::get('code_key'))));
+
+						$response = $mail->send();
+					}
+					catch (Exception $e)
+					{
+
+					}
 				}
 				catch(ValidationException $e)
 				{
@@ -266,6 +296,21 @@ class TicketController extends Controller
 					$ticket->save();
 					
 					$this->_flash('alert', 'Ticket respondido com sucesso');
+					
+					try
+					{
+						$mail = new Mail();
+						$mail->setSubject('[Ticket ID: '. $ticket->IdParent .'] ' . html_entity_decode($ticket->Subject));
+						$mail->setTo($ticket->Email, html_entity_decode($ticket->Name));
+						$mail->addFrom('vaneves@vaneves.com', 'Van Neves');
+						$mail->setTemplate('mail', 'reply', array('name' => html_entity_decode($ticket->Name), 'id' => $ticket->IdParent, 'code' => Security::encrypt($ticket->IdParent, Config::get('code_key'))));
+
+						$response = $mail->send();
+					}
+					catch (Exception $e)
+					{
+
+					}
 				}
 				catch(ValidationException $e)
 				{

@@ -110,3 +110,12 @@ Config::set('cache', array(
 Config::set('directories', array(
 	'app/vendors',
 ));
+
+/**
+ * Chave do Mandrill
+ */
+Config::set('mandrill_key', '');
+
+Config::set('session_time', 99999);
+
+Config::set('code_key', '');

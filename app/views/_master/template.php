@@ -38,7 +38,7 @@
 						<ul class="nav">
 						<?php if (Auth::is('admin', 'employee')): ?>
 							<li><a href="~/admin/ticket/list">Todos os Tickets</a></li>
-							<li><a href="~/admin/ticket/list-status">Ticket Abertos</a></li>
+							<li><a href="~/admin/ticket/list/open">Ticket Abertos</a></li>
 						<?php elseif (Auth::is('client')): ?>
 							<li><a href="~/ticket/add">Criar Ticket</a></li>
 							<li><a href="~/ticket/my">Meus Tickets</a></li>
