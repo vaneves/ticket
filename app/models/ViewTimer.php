@@ -12,4 +12,9 @@ class Timer extends Model
 	
 	/** @Column(Type="String") */
 	public $Time;
+	
+	public static function getByTicket($id)
+	{
+		$db = Database::factory();
+	}
 }
