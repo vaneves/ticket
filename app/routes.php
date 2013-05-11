@@ -13,11 +13,12 @@
  * Route::prefix('admin');
  */
 Route::add('^/?$', 'ticket/check');
- Route::add('^login$', 'user/login');
- Route::add('^logout$', 'user/logout');
- Route::add('^register$', 'user/register');
- Route::add('^remember$', 'user/remember');
- Route::add('^admin/ticket/list/(open|closed|answered)/(.*)$', 'admin/ticket/list-status/$1/$2');
- Route::add('^ticket/view/([\d]+)/(.+)$', 'ticket/view-free/$1/$2');
- Route::prefix('admin');
- Route::prefix('client');
+Route::add('^login$', 'user/login');
+Route::add('^logout$', 'user/logout');
+Route::add('^register$', 'user/register');
+Route::add('^remember$', 'user/remember');
+Route::add('^admin/ticket/list/(open|closed|answered)/(.*)$', 'admin/ticket/list-status/$1/$2');
+Route::add('^ticket/view/([\d]+)/(.+)$', 'ticket/view-free/$1/$2');
+Route::add('^ping$', 'ticket/ping');
+Route::prefix('admin');
+Route::prefix('client');

@@ -34,7 +34,7 @@
 			<?php if($model[0]->Status != 3): ?>
 			<a href="~/admin/ticket/start/<?= $id ?>" class="btn btn-inverse"><i class="icon-time icon-white"></i> Iniciar</a>
 			<?php elseif($model[0]->Status == 3): ?>
-			<a href="~/admin/ticket/stop/<?= $id ?>" class="btn btn-inverse"><i class="icon-time icon-white"></i> Parar</a>
+			<a href="#modal-timer" class="btn btn-inverse" role="button" data-toggle="modal"><i class="icon-time icon-white"></i> Parar</a>
 			<?php endif ?>
 			<?php if($model[0]->Status != 2): ?>
 				<a href="~/admin/ticket/close/<?= $id ?>" class="btn btn-danger"><i class="icon-ban-circle icon-white"></i> Fechar</a>
@@ -87,6 +87,32 @@
 			<a href="~/admin/ticket/delete/<?= $id ?>" class="btn btn-danger"><i class="icon-remove icon-white"></i> Excluir</a>
 		</div>
 	</div>
+	
+	<?php if(count($timers)): ?>
+	<h4>Logs de Tempo</h4>
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Data</th>
+				<th>Descrição</th>
+				<th>Início</th>
+				<th>Fim</th>
+				<th>Tempo</th>
+			</tr>
+		</thead>
+		<tbody>
+		<?php foreach($timers as $t): ?>
+			<tr>
+				<td><?= date('d/m/Y', strtotime($t->StartDate)) ?></td>
+				<td><?= $t->Description ?></td>
+				<td><?= date('H:m', strtotime($t->StartDate)) ?></td>
+				<td><?= date('H:m', strtotime($t->EndDate)) ?></td>
+				<td><?= Timer::calcToString(strtotime($t->StartDate), strtotime($t->EndDate)) ?></td>
+			</tr>
+		<?php endforeach ?>
+		</tbody>
+	</table>
+	<?php endif ?>
 
 	<?php if($model[0]->Status != 2): ?>
 	<form method="post" action="~/admin/ticket/reply/<?= $model[0]->Id ?>" enctype="multipart/form-data">
@@ -114,4 +140,25 @@
 		</fieldset>
 	</form>
 	<?php endif ?>
+</div>
+
+<div id="modal-timer" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="modal-timer-label" aria-hidden="true">
+	<form method="post" action="~/admin/ticket/stop/<?= $id ?>">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+			<h3 id="modal-timer-label">Cronometar Tempo</h3>
+		</div>
+		<div class="modal-body">
+			<div class="row-fluid">
+				<div class="span12">
+					<label>Descrição</label>
+					<textarea rows="4" name="Description" id="Description" class="span12"></textarea>
+				</div>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button class="btn" data-dismiss="modal" aria-hidden="true">Cancelar</button>
+			<button class="btn btn-primary" type="submit">Salvar</button>
+		</div>
+	</form>
 </div>

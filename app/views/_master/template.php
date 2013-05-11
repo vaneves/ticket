@@ -20,6 +20,14 @@
 					<div class="span5">
 						<div class="logo"><h1 class="muted">Ticket</h1></div>
 					</div>
+					<div class="span5">
+						
+					</div>
+					<div class="span2">
+						<?php if(Session::get('timer')): ?>
+						<div class="logo"><h1 class="muted" id="timer"><?= Timer::calc(Session::get('timer'), time()) ?></h1></div>
+						<?php endif ?>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -51,6 +59,8 @@
 						<ul class="nav">
 							<li><a href="~/ticket/add">Criar Ticket</a></li>
 							<li><a href="~/ticket/check">Visualizar Ticket</a></li>
+						</ul>
+						<ul class="nav pull-right">
 							<li><a href="~/user/login">Login</a></li>
 							<li><a href="~/user/register">Cadastre-se</a></li>
 						</ul>
@@ -68,6 +78,8 @@
 				<p>&copy; Van Neves 2011 - <?= date('Y') ?></p>
 			</div>
 		</div>
+		<script>var ROOT = '<?= ROOT_VIRTUAL ?>';</script>
+		<script>var timer_full = '<?= Session::get('timer') ? strtotime(Timer::calc(Session::get('timer'), time())) : '0' ?>';</script>
 		<script src="~/js/jquery-1.9.1.min.js"></script>
 		<script src="~/js/bootstrap.min.js"></script>
 	</body>
