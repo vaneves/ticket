@@ -38,7 +38,7 @@ class Timer extends Model
 	public static function allByTicket($id)
 	{
 		$db = Database::getInstance();
-		return $db->Timer->all('TicketId = ?', $id);
+		return $db->Timer->orderByDesc('StartDate')->all('TicketId = ?', $id);
 	}
 	
 	public static function calc($start, $end)

@@ -83,10 +83,18 @@ class TicketController extends Controller
 	public function view($id)
 	{
 		$tickets = Ticket::view($id);
-		 if(count($tickets) && $tickets[0]->IdParent == null)
-			 return $this->_view($tickets);
+		if(count($tickets) && $tickets[0]->IdParent == null)
+		{
+			$timer		= ViewTimer::getByTicket($id);
+			$timers		= Timer::allByTicket($id);
+			$tickets	= Ticket::view($id);
+			
+			$this->_set('timer', $timer);
+			$this->_set('timers', $timers);
+			return $this->_view($tickets);
+		}
 		 
-		 return $this->_snippet('notfound');
+		return $this->_snippet('notfound');
 	}
 	
 	public function view_free($id, $code)
@@ -94,14 +102,18 @@ class TicketController extends Controller
 		$id = Security::decrypt($code, Config::get('code_key'));
 		
 		$tickets = Ticket::view($id);
-		 if(count($tickets) && $tickets[0]->IdParent == null)
-		 {
-			 Auth::set('ticket');
-			 Session::set('ticket', $tickets[0]);
-				
-			 return $this->_view('view', $tickets);
-		 }
-		 return $this->_snippet('notfound');
+		if(count($tickets) && $tickets[0]->IdParent == null)
+		{
+			Auth::set('ticket');
+			Session::set('ticket', $tickets[0]);
+			$timer		= ViewTimer::getByTicket($id);
+			$timers		= Timer::allByTicket($id);
+			
+			$this->_set('timer', $timer);
+			$this->_set('timers', $timers);
+			return $this->_view('view', $tickets);
+		}
+		return $this->_snippet('notfound');
 	}
 	
 	/**
@@ -261,8 +273,11 @@ class TicketController extends Controller
 	 */
 	public function admin_view($id)
 	{
-		$timers = Timer::allByTicket($id);
-		$tickets = Ticket::view($id);
+		$timer		= ViewTimer::getByTicket($id);
+		$timers		= Timer::allByTicket($id);
+		$tickets	= Ticket::view($id);
+		
+		$this->_set('timer', $timer);
 		$this->_set('timers', $timers);
 		return $this->_view($tickets);
 	}
@@ -303,8 +318,8 @@ class TicketController extends Controller
 					{
 						$mail = new Mail();
 						$mail->setSubject('[Ticket ID: '. $ticket->IdParent .'] ' . html_entity_decode($ticket->Subject));
-						$mail->setTo($ticket->Email, html_entity_decode($ticket->Name));
-						$mail->addFrom('vaneves@vaneves.com', 'Van Neves');
+						$mail->addTo($ticket->Email, html_entity_decode($ticket->Name));
+						$mail->setFrom('vaneves@vaneves.com', 'Van Neves');
 						$mail->setTemplate('mail', 'reply', array('name' => html_entity_decode($ticket->Name), 'id' => $ticket->IdParent, 'code' => Security::encrypt($ticket->IdParent, Config::get('code_key'))));
 
 						$response = $mail->send();
@@ -520,5 +535,39 @@ class TicketController extends Controller
 			return $this->_json($diff->format('%H:%I:%S'));
 		}
 		return $this->_json('00:00:00');
+	}
+	
+	/**
+	 * @Auth("admin","employee")
+	 */
+	public function admin_add_time($id)
+	{
+		if(is_post)
+		{
+			$parent = Ticket::get($id);
+			if($parent)
+			{
+				try
+				{
+					$timer = $this->_data(new Timer());
+					$timer->TicketId	= (int)$id;
+					$timer->UserId		= Session::get('user')->Id;
+					$timer->save();
+					
+					$this->_flash('alert', 'Tempo adicionado com sucesso');
+				}
+				catch(ValidationException $e)
+				{
+					$this->_flash('alert alert-error', $e->getMessage());
+				}
+				catch(Exception $e)
+				{
+					$this->_flash('alert alert-error', 'Ocorreu um erro ao tentar adicionar tempo');
+				}
+				$this->_redirect('~/admin/ticket/view/'. $id);
+			}
+			return $this->_snippet('notfound');
+		}
+		return $this->_snippet('badrequest');
 	}
 }

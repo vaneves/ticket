@@ -7,7 +7,7 @@
 		<meta name="description" content="">
 		<meta name="author" content="">
 
-		<link href="~/css/all.css" rel="stylesheet">
+		<link href="~/css/all.css?20130512" rel="stylesheet">
 		<?php if (IS_MOBILE || IS_TABLET): ?>
 			<link href="~/css/bootstrap-responsive.min.css" rel="stylesheet">
 		<?php endif ?>
@@ -81,6 +81,6 @@
 		<script>var ROOT = '<?= ROOT_VIRTUAL ?>';</script>
 		<script>var timer_full = '<?= Session::get('timer') ? strtotime(Timer::calc(Session::get('timer'), time())) : '0' ?>';</script>
 		<script src="~/js/jquery-1.9.1.min.js"></script>
-		<script src="~/js/bootstrap.min.js"></script>
+		<script src="~/js/bootstrap.min.js?20130512"></script>
 	</body>
 </html>

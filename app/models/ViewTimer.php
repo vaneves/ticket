@@ -1,8 +1,8 @@
 <?php 
 /**
- * @Entity("view_timer")
+ * @View("view_timer")
  */
-class Timer extends Model
+class ViewTimer extends Model
 {	
 	/** @Column(Type="Int") */
 	public $UserId;
@@ -16,5 +16,7 @@ class Timer extends Model
 	public static function getByTicket($id)
 	{
 		$db = Database::factory();
+		$timer = $db->ViewTimer->single('TicketId = ?', $id);
+		return $timer;
 	}
 }

@@ -11,7 +11,7 @@
 				</div>
 				<div class="span3 status">
 					<div class=""><b>Tempo</b></div>
-					<div><?= $model[0]->Time ?></div>
+					<div><?= isset($timer->Time) ? $timer->Time : '00:00:00' ?></div>
 				</div>
 				<div class="span3 status">
 					<div class=""><b>Prioridade</b></div>
@@ -78,6 +78,11 @@
 	</div>
 
 	<div class="btn-controls">
+		<div class="left">
+			<?php if(Auth::is('admin','employee')): ?>
+			<a href="#modal-add-timer" class="btn" role="button" data-toggle="modal"><i class="icon icon-time"></i> Add Tempo</a>
+			<?php endif ?>
+		</div>
 		<div class="right">
 			<?php if($model[0]->Status != 2): ?>
 				<a href="~/admin/ticket/close/<?= $id ?>" class="btn btn-danger"><i class="icon-ban-circle icon-white"></i> Fechar</a>
@@ -105,15 +110,15 @@
 			<tr>
 				<td><?= date('d/m/Y', strtotime($t->StartDate)) ?></td>
 				<td><?= $t->Description ?></td>
-				<td><?= date('H:m', strtotime($t->StartDate)) ?></td>
-				<td><?= date('H:m', strtotime($t->EndDate)) ?></td>
+				<td><?= date('H:i', strtotime($t->StartDate)) ?></td>
+				<td><?= date('H:i', strtotime($t->EndDate)) ?></td>
 				<td><?= Timer::calcToString(strtotime($t->StartDate), strtotime($t->EndDate)) ?></td>
 			</tr>
 		<?php endforeach ?>
 		</tbody>
 	</table>
 	<?php endif ?>
-
+	
 	<?php if($model[0]->Status != 2): ?>
 	<form method="post" action="~/admin/ticket/reply/<?= $model[0]->Id ?>" enctype="multipart/form-data">
 		<fieldset>
@@ -149,6 +154,36 @@
 			<h3 id="modal-timer-label">Cronometar Tempo</h3>
 		</div>
 		<div class="modal-body">
+			<div class="row-fluid">
+				<div class="span12">
+					<label>Descrição</label>
+					<textarea rows="4" name="Description" id="Description" class="span12"></textarea>
+				</div>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button class="btn" data-dismiss="modal" aria-hidden="true">Cancelar</button>
+			<button class="btn btn-primary" type="submit">Salvar</button>
+		</div>
+	</form>
+</div>
+<div id="modal-add-timer" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="modal-add-timer-label" aria-hidden="true">
+	<form method="post" action="~/admin/ticket/add-time/<?= $id ?>">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+			<h3 id="modal-add-timer-label">Adicionar Tempo</h3>
+		</div>
+		<div class="modal-body">
+			<div class="row-fluid">
+				<div class="span6">
+					<label>Data Inicial</label>
+					<input type="text" name="StartDate" class="span12" value="<?= date('Y-m-d H:i:s') ?>">
+				</div>
+				<div class="span6">
+					<label>Data Final</label>
+					<input type="text" name="EndDate" class="span12" value="<?= date('Y-m-d H:i:s') ?>">
+				</div>
+			</div>
 			<div class="row-fluid">
 				<div class="span12">
 					<label>Descrição</label>

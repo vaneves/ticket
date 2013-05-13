@@ -11,7 +11,7 @@
 				</div>
 				<div class="span3 status">
 					<div class=""><b>Tempo</b></div>
-					<div><?= $model[0]->Time ?></div>
+					<div><?= isset($timer->Time) ? $timer->Time : '00:00:00' ?></div>
 				</div>
 				<div class="span3 status">
 					<div class=""><b>Prioridade</b></div>
@@ -71,6 +71,32 @@
 			<?php endif ?>
 		</div>
 	</div>
+	
+		<?php if(count($timers)): ?>
+	<h4>Logs de Tempo</h4>
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Data</th>
+				<th>Descrição</th>
+				<th>Início</th>
+				<th>Fim</th>
+				<th>Tempo</th>
+			</tr>
+		</thead>
+		<tbody>
+		<?php foreach($timers as $t): ?>
+			<tr>
+				<td><?= date('d/m/Y', strtotime($t->StartDate)) ?></td>
+				<td><?= $t->Description ?></td>
+				<td><?= date('H:i', strtotime($t->StartDate)) ?></td>
+				<td><?= date('H:i', strtotime($t->EndDate)) ?></td>
+				<td><?= Timer::calcToString(strtotime($t->StartDate), strtotime($t->EndDate)) ?></td>
+			</tr>
+		<?php endforeach ?>
+		</tbody>
+	</table>
+	<?php endif ?>
 
 	<?php if($model[0]->Status != 2): ?>
 	<form method="post" action="~/ticket/reply/<?= $model[0]->Id ?>" enctype="multipart/form-data">
